@@ -4,7 +4,19 @@ A python library which gives programmatic control over GDB.
 - `main.py` is a program that runs GDB on an C executable prints the stack arguments and locals of the frame for each line of code executed
 
 ## Usage
-- `python3 main.py code [breakpoints ...]`
+```
+usage: main.py [-h] [-b [BREAKPOINTS [BREAKPOINTS ...]]] files [files ...]
+
+Runs GDB on C code and prints stack locals and frames
+
+positional arguments:
+  files                 the filename(s) of C code
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -b [BREAKPOINTS [BREAKPOINTS ...]], --breakpoints [BREAKPOINTS [BREAKPOINTS ...]]
+                        the breakpoints (lines or functions) to be placed for debugging
+```
 
 ## Setup
 ### Prerequisites
