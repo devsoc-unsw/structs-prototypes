@@ -2,10 +2,15 @@ from pygdbmi.gdbcontroller import GdbController
 
 COMMAND_TIMEOUT_SEC = 0.1
 
+import sys
+import subprocess
 
-def main():
+def compile_code(code_file):
+    subprocess.run(["gcc", "-ggdb", code_file])
+
+def debug_code():
     gdbmi = GdbController()
-    gdbmi.write('-file-exec-and-symbols linked_list')
+    gdbmi.write('-file-exec-and-symbols a.out')
     gdbmi.write('-break-insert main')  # machine interface (MI) commands start with a '-'
     gdbmi.write('-break-insert append')
     # gdbmi.write('-enable-frame-filters')
@@ -33,6 +38,13 @@ def main():
                 print(f"arg: {frame_variable['name']} = {frame_variable['value']}")
             else:
                 print(f"local: {frame_variable['name']} = {frame_variable['value']}")
+
+
+
+def main():
+    code_file = sys.argv[1]
+    compile_code(code_file)
+    debug_code()
 
 if __name__ == '__main__':
     main()
