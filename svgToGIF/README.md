@@ -1,1 +1,1 @@
-svg -> canvas -> gif
+# svg -> canvas -> gif
