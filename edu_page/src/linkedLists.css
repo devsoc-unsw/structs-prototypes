@@ -1,0 +1,31 @@
+/* Apply a modern and clearly visible style to the linked list page */
+
+/* Body */
+body {
+  font-family: sans-serif;
+  background-color: #c8c6c6;
+  color: #000000;
+  margin-left: 50px;
+}
+
+
+/* Quiz */
+.MCquestion__answerExplanation {
+  color: #fff;
+}
+/* quiz buttons */
+input[type="radio"] {
+  appearance: none;
+  position: relative;
+  padding: 10px 20px;
+  border: 2px solid #262c30;
+  border-radius: 50px;
+}
+
+/* correct/incorrect buttons */
+.MCquestion__option--correct input[type="radio"] {
+  background-color: green;
+}
+.MCquestion__option--incorrect input[type="radio"] {
+  background-color: red;
+}
