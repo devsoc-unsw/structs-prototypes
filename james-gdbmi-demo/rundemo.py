@@ -1,3 +1,4 @@
+from typing import List
 from pygdbmi.gdbcontroller import GdbController
 from pprint import pprint
 
@@ -13,13 +14,14 @@ def format_vars(allval, simpleval):
         variables.append(nvar)
     return variables
 
+
 def derefence_all_needed(variables, gdbmi):
     dereferenced: list[dict] = []
     for var in variables:
         if "*" in var["type"]:
             res = gdbmi.write(f"-data-evaluate-expression *{var['name']}")
             nvar = {}
-            #pprint(res)
+            # pprint(res)
             nvar["name"] = var["name"]
             nvar["address"] = var["value"]
             nvar["dereferenced"] = res[0]["payload"]["value"]
@@ -28,7 +30,7 @@ def derefence_all_needed(variables, gdbmi):
 
 
 file: str = input("Chose binary: ")
-lines: list[int] = []
+lines: List[int] = []
 print("Be sure to choose valid lines")
 prompt_line = "Enter a line or function you want to break on: "
 line = input(prompt_line)
@@ -40,7 +42,7 @@ print(lines)
 
 gdbmi = GdbController()
 r = gdbmi.write(f"-file-exec-and-symbols {file}")
-#pprint(r)
+# pprint(r)
 for line in lines:
     gdbmi.write(f"-break-insert {line}")
 # r = gdbmi.write("-break-list")
@@ -49,14 +51,16 @@ running = True
 r = gdbmi.write("-exec-run")
 while running:
     r_use = r[len(r) - 1]["payload"]
-    #print(r_use)
-    print(f"At line {r_use['frame']['line']} in function {r_use['frame']['func']} in file the values of the current frame are:")
+    # print(r_use)
+    print(
+        f"At line {r_use['frame']['line']} in function {r_use['frame']['func']} in file the values of the current frame are:")
 
     v1 = gdbmi.write("-stack-list-variables --all-values")
 
     v2 = gdbmi.write("-stack-list-variables --simple-values")
 
-    variables = format_vars(v1[len(v1) - 1]["payload"]["variables"], v2[len(v2) - 1]["payload"]["variables"])
+    variables = format_vars(
+        v1[len(v1) - 1]["payload"]["variables"], v2[len(v2) - 1]["payload"]["variables"])
     pprint(variables)
     def_vars = derefence_all_needed(variables, gdbmi)
     pprint(def_vars)
