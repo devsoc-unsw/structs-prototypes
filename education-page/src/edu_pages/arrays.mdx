@@ -1,0 +1,119 @@
+import MCquestion from "../MCquestion";
+import CodeBlock from '../CodeBlock';
+import { Link } from 'react-router-dom';
+import arrayImg from "../assets/array.png";
+import peopleLine from "../assets/FunnylinkedList.gif";
+
+# Arrays
+
+# Array Data Structure
+
+<span style={{ color: 'rgba(37,38,94,.7)' }}>In this tutorial, you will learn about the array data structure and its implementation in Python, Java, C, and C++.</span>
+
+An array is a collection of elements of the same data type that are stored in contiguous memory locations. Each element in the array is identified by its index, which is an integer value starting from zero.
+
+Arrays can be of multiple types: **one-dimensional**, **multi-dimensional**, and **jagged arrays**. In this article, we will focus on the one-dimensional array. To learn about other types, visit 
+<a href="https://www.programiz.com/dsa/array" style={{ color: 'blue', textDecoration: 'none' }}>Types of Arrays</a>
+
+<div style={{ border: '1px solid black', padding: '10px', margin: '10px', borderLeft: '4px solid blue' }}>**Note**: An array can be thought of as a collection of variables of the same data type. Each variable is assigned a unique identifier (or index) that corresponds to its position in the array.</div>
+
+<hr style={{ marginTop: '40px', marginBottom: '40px' }} />
+
+<CodeBlock>
+  {`#include <stdio.h>
+int main() {
+   int arr[5] = {1, 2, 3, 4, 5};
+   printf("%d", arr[2]); // Output: 3
+   return 0;
+}`}
+</CodeBlock>
+
+Arrays are a fundamental data structure used in computer science and programming. They provide an efficient way of storing and accessing a large amount of data. Each element in the array can be accessed by its index, making it easy to retrieve and modify data in the array.
+
+Arrays can be used for a variety of purposes, such as implementing search algorithms, sorting algorithms, and hash tables. There are several types of arrays, including one-dimensional arrays, multi-dimensional arrays, and jagged arrays.
+
+
+<MCquestion   
+question={{
+  question: 'What is an array?',
+  options: [
+    'A collection of elements of the same data type that are stored in contiguous memory locations.',
+    'A way to link two computers together so they can share data.',
+    'A list of hyperlinks on a web page.',
+    'A list of items that are sorted in ascending order.',
+  ],
+  answerIndex: 0,
+  answerExplanation: ' An array is a collection of elements of the same data type that are stored in contiguous memory locations.',
+}}
+/>
+
+A one-dimensional array is an array that contains a single row of elements. Each element in the array is identified by its index, which is an integer value starting from zero. A multi-dimensional array, on the other hand, is an array that contains multiple rows and columns of elements. Each element in the array is identified by its row and column indices.
+
+Arrays can be initialized with a fixed size, or dynamically allocated based on the amount of data to be stored. Initializing an array with a fixed size involves specifying the size of the array in the declaration, while dynamically allocating an array involves using a function like `malloc()` to allocate memory for the array at runtime.
+
+Deleting an element from an array involves shifting all the elements after the deleted element one position to the left, effectively overwriting the deleted element. Inserting an element into an array involves shifting all the
+
+
+<MCquestion   
+question={{
+  question: 'What is an array?',
+  options: [
+    'A collection of elements of the same data type that are stored in contiguous memory locations.',
+    'A way to link two computers together so they can share data.',
+    'A list of hyperlinks on a web page.',
+    'A list of items that are sorted in ascending order.',
+  ],
+  answerIndex: 0,
+  answerExplanation: ' An array is a collection of elements of the same data type that are stored in contiguous memory locations.',
+}}
+/>
+
+A one-dimensional array is an array that contains a single row of elements. Each element in the array is identified by its index, which is an integer value starting from zero. A multi-dimensional array, on the other hand, is an array that contains multiple rows and columns of elements. Each element in the array is identified by its row and column indices.
+
+Arrays can be initialized with a fixed size, or dynamically allocated based on the amount of data to be stored. Initializing an array with a fixed size involves specifying the size of the array in the declaration, while dynamically allocating an array involves using a function like `malloc()` to allocate memory for the array at runtime.
+
+Deleting an element from an array involves shifting all the elements after the deleted element one position to the left, effectively overwriting the deleted element. Inserting an element into an array involves shifting all the elements after the inserted element one position to the right, making room for the new element.
+
+Searching for an element in an array can be done using various algorithms, such as linear search and binary search. Linear search involves iterating over the array and comparing each element with the target element, while binary search involves dividing the array in half and recursively searching the left or right half depending on the value of the target element.
+
+<MCquestion   
+question={{
+  question: 'What is the difference between a one-dimensional array and a multi-dimensional array?',
+  options: [
+    'A one-dimensional array contains a single row of elements, while a multi-dimensional array contains multiple rows and columns of elements.',
+    'A one-dimensional array can only store integers, while a multi-dimensional array can store multiple data types.',
+    'A one-dimensional array is sorted in ascending order, while a multi-dimensional array is sorted in descending order.',
+    'A one-dimensional array is faster to search than a multi-dimensional array.',
+  ],
+  answerIndex: 0,
+  answerExplanation: ' A one-dimensional array is an array that contains a single row of elements, while a multi-dimensional array is an array that contains multiple rows and columns of elements.',
+}}
+/>
+
+Arrays are a powerful data structure that are widely used in computer science and programming. They provide an efficient way of storing and accessing a large amount of data, and can be easily adapted to suit a wide range of applications. With a solid understanding of how arrays work and how to implement common operations, you can start incorporating this versatile data structure into your own projects.
+
+<img src={arrayImg} alt="Array Example" />
+
+<MCquestion   
+question={{
+  question: 'What is the time complexity of accessing an element in an array?',
+  options: [
+    'O(1)',
+    'O(n)',
+    'O(log n)',
+    'O(n^2)',
+  ],
+  answerIndex: 0,
+  answerExplanation: ' Accessing an element in an array has a time complexity of O(1), because the index of the element can be used to directly access its memory location.',
+}}
+/>
+
+<img src={peopleLine} alt="funny array people" />
+
+# Try the Quiz!
+
+<Link to="/arraysQuiz">Quiz Link</Link>
+
+## Or head back to the main Roadmap page: 
+
+<Link to="/roadmap">Roadmap Page Link</Link>
