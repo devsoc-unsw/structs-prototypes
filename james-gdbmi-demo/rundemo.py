@@ -51,7 +51,7 @@ running = True
 r = gdbmi.write("-exec-run")
 while running:
     r_use = r[len(r) - 1]["payload"]
-    # print(r_use)
+    print(f"{r_use=}")
     print(
         f"At line {r_use['frame']['line']} in function {r_use['frame']['func']} in file the values of the current frame are:")
 
