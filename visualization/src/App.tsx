@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import DrawingBoard from './component/DrawingBoard';
 import { generateArrayState } from './component/state/arrayDsParser';
-import { State } from './component/state/state';
+import { State, VariableType } from './component/state/state';
 
 const App: React.FC = () => {
   const [entityData, setEntityData] = useState<State | null>(null);
@@ -18,19 +18,23 @@ const App: React.FC = () => {
 
   const onNextState = () => {
     if (entityData) {
-      let variable = entityData.variables;
+      let variable = entityData.variables[0];
 
       let array = entityData.dataStructure;
-      let arrayIndex = array.data.findIndex(
-        element => element.addr === variable[0].addr,
-      );
+      if (variable.type === VariableType.POINTER) {
+        let addr = variable.addr;
+        let arrayIndex = array.data.findIndex(
+          element => element.addr === addr,
+        );
 
-      if (arrayIndex !== -1 && arrayIndex + 1 < array.data.length) {
-        variable[0].addr = array.data[arrayIndex + 1].addr;
+        if (arrayIndex !== -1 && arrayIndex + 1 < array.data.length) {
+          variable.addr = array.data[arrayIndex + 1].addr;
+        }
+        console.log('Set entity', entityData.variables);
+        setHistory([...history, entityData]);
+        setEntityData(entityData);
+        return;
       }
-      console.log('Set entity', entityData.variables);
-      setHistory([...history, entityData]);
-      setEntityData(entityData);
     }
   };
 

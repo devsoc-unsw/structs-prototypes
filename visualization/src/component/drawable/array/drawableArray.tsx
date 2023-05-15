@@ -1,5 +1,5 @@
 import React from 'react';
-import { State } from '../../state/state';
+import { State, VariableType } from '../../state/state';
 import DrawableArrayNode from './drawableArrayNode';
 import DrawableVariable from './drawableVaraible';
 
@@ -34,20 +34,41 @@ const ArrayRenderer: React.FC<ArrayRendererProps> = ({ prevState, nextState }) =
     });
   };
 
+
+  const nonPointerVarY = 200;
   const renderVariable = () => {
-    const variable = nextState.variables[0];
-    if (!variable) return null;
-
-    const targetNode = nextState.dataStructure.data.find(
-      node => node.addr === variable.addr,
-    );
-    if (!targetNode) return null;
-
-    const index = nextState.dataStructure.data.indexOf(targetNode);
-    const x = padding + (rectWidth + spaceBetweenNodes) * index + rectWidth / 2 - 5;
-    const y = 1.5 * padding + rectHeight;
-
-    return <DrawableVariable x={x} y={y} label={variable.name} />;
+    return nextState.variables.map((variable) => {
+      switch (variable.type) {
+        case VariableType.POINTER:
+          const targetNode = nextState.dataStructure.data.find(
+            (node) => node.addr === variable.addr
+          );
+          if (!targetNode) return null;
+      
+          const index = nextState.dataStructure.data.indexOf(targetNode);
+          const x =
+            padding + (rectWidth + spaceBetweenNodes) * index + rectWidth / 2 - 5;
+          const y = 1.5 * padding + rectHeight;
+      
+          return <DrawableVariable key={variable.name} x={x} y={y} label={variable.name} />;
+        case VariableType.INT:
+          const intX = padding;
+          const intY = 2 * padding + nonPointerVarY;
+  
+          return (
+            <text
+              key={variable.name}
+              x={intX}
+              y={intY}
+              fontSize="14"
+              textAnchor="start"
+              dominantBaseline="central"
+            >
+              {`${variable.name}: ${variable.value}`}
+            </text>
+          );
+      }
+    });
   };
 
   return (

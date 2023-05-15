@@ -1,4 +1,4 @@
-import { ArrayNode, ArrayDataStructure, SupportDataType, State } from './state'; // Replace with the actual file name containing your types
+import { ArrayNode, ArrayDataStructure, SupportDataType, State, VariableType } from './state'; // Replace with the actual file name containing your types
 
 function generateRandomArrayData(
   minValue: number,
@@ -37,6 +37,7 @@ export function generateArrayState(): State {
   return {
     variables: [
       {
+        type: VariableType.POINTER,
         name: 'curr',
         addr: ds.data[0].addr,
         value: ds.data[0].data.toString(),
