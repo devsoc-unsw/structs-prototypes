@@ -1,49 +1,96 @@
 import React, { useState } from 'react';
 import DrawingBoard from './component/DrawingBoard';
-import { generateArrayState } from './component/state/arrayDsParser';
+import { generateArrayState, generateIncreArrayState } from './component/state/arrayDsParser';
 import { State, VariableType } from './component/state/state';
+import "./App.css"
 
 const App: React.FC = () => {
-  const [entityData, setEntityData] = useState<State | null>(null);
+  const [currState, setEntityData] = useState<State | null>(null);
   const [history, setHistory] = useState<State[]>([]);
+  const [example, setExample] = useState<'traverse' | 'sum' | null>(null);
 
   const onGenerateArray = () => {
     const randomArrayData = generateArrayState();
     setEntityData(randomArrayData);
+    setHistory([clone(randomArrayData)]);
+  };
+
+  const onIncreGenerateArray = () => {
+    const randomArrayData = generateIncreArrayState();
+    setEntityData(randomArrayData);
+    setHistory([clone(randomArrayData)]);
+  };
+
+  const renderExampleButtons = () => {
+    return (
+      <div>
+        <button
+          className="btn btn-primary"
+          onClick={() => setExample('traverse')}
+        >
+          Traverse Array Example
+        </button>
+        <button className="btn btn-primary" onClick={() => setExample('sum')}>
+          Sum Example
+        </button>
+      </div>
+    );
   };
 
   const onResetArray = () => {
     setEntityData(null);
+    setHistory([]);
   };
 
+  const clone = (a: any) => {
+    return JSON.parse(JSON.stringify(a));
+  }
+
   const onNextState = () => {
-    if (entityData) {
-      let variable = entityData.variables[0];
+    if (currState) {
+      let value = 0;
+      for (let variable of currState.variables) {
+        let array = currState.dataStructure;
+        if (variable.type === VariableType.POINTER) {
+          let addr = variable.addr;
+          let arrayIndex = array.data.findIndex(
+            element => element.addr === addr,
+          );
 
-      let array = entityData.dataStructure;
-      if (variable.type === VariableType.POINTER) {
-        let addr = variable.addr;
-        let arrayIndex = array.data.findIndex(
-          element => element.addr === addr,
-        );
-
-        if (arrayIndex !== -1 && arrayIndex + 1 < array.data.length) {
-          variable.addr = array.data[arrayIndex + 1].addr;
+          if (arrayIndex !== -1 && arrayIndex + 1 < array.data.length) {
+            variable.addr = array.data[arrayIndex + 1].addr;
+            variable.value = array.data[arrayIndex + 1].data as string;
+            value = Number(array.data[arrayIndex + 1].data);
+          } else {
+            return;
+          }
+          setEntityData(currState);
+        } else {
+          // Sum up the value
+          variable.value = (Number(variable.value) + value).toString();
+          setEntityData(currState);
+          setHistory([...history, clone(currState)]);
         }
-        console.log('Set entity', entityData.variables);
-        setHistory([...history, entityData]);
-        setEntityData(entityData);
-        return;
       }
     }
   };
 
-  const debug = () => {
-    console.log(entityData);
-  };
+  const onPreviousState = () => {
+    if (history.length > 1) {
+      const previousHistory = history.slice(0, -1);
+      setHistory(clone(previousHistory));
+      debugger;
+      console.log('Histroy state', previousHistory[previousHistory.length - 1])
+      setEntityData(clone(previousHistory[previousHistory.length - 1]));
+    }
+  }
+
+  const onDebug = () => {
+    console.log(history);
+  }
 
   const prevState = history.length > 1 ? history[history.length - 2] : null;
-  const nextState = entityData;
+  const nextState = currState;
 
   return (
     <div
@@ -76,17 +123,29 @@ const App: React.FC = () => {
         <button
           className="btn btn-primary"
           onClick={onGenerateArray}
-          disabled={entityData !== null}
+          style={{ padding: '10px' }}
+          disabled={currState !== null}
         >
-          Generate Array
+          Generate Traverse Array Example
         </button>
-        <button className="btn btn-warning" onClick={onResetArray}>
+        <button
+          className="btn btn-primary"
+          onClick={onIncreGenerateArray}
+          style={{ margin: '10px' }}
+          disabled={currState !== null}
+        >
+          Generate Sum Example
+        </button>
+        <button className="btn btn-warning" onClick={onResetArray} style={{ margin: '10px' }}>
           Reset Array
         </button>
-        <button className="btn btn-success" onClick={onNextState}>
+        <button className="btn btn-success" onClick={onNextState} style={{ margin: '10px' }}>
           Next State
         </button>
-        <button className="btn btn-secondary" onClick={debug}>
+        <button className="btn btn-info" onClick={onPreviousState} style={{ margin: '10px' }}>
+          Previous State
+        </button>
+        <button className="btn btn-info" onClick={onDebug} style={{ margin: '10px' }}>
           Debug
         </button>
       </div>

@@ -2,6 +2,8 @@ import React from 'react';
 import { State, VariableType } from '../../state/state';
 import DrawableArrayNode from './drawableArrayNode';
 import DrawableVariable from './drawableVaraible';
+import DrawableIntVariable from './textVariable';
+
 
 
 type ArrayRendererProps = {
@@ -34,8 +36,7 @@ const ArrayRenderer: React.FC<ArrayRendererProps> = ({ prevState, nextState }) =
     });
   };
 
-
-  const nonPointerVarY = 200;
+  let nonPointerVarY = 140;
   const renderVariable = () => {
     return nextState.variables.map((variable) => {
       switch (variable.type) {
@@ -52,29 +53,44 @@ const ArrayRenderer: React.FC<ArrayRendererProps> = ({ prevState, nextState }) =
       
           return <DrawableVariable key={variable.name} x={x} y={y} label={variable.name} />;
         case VariableType.INT:
-          const intX = padding;
+          const intX = 2.5 * padding;
           const intY = 2 * padding + nonPointerVarY;
+          nonPointerVarY += 20
   
+          console.log('Here', `${variable.name}: ${variable.value}`);
           return (
-            <text
+            <DrawableIntVariable
               key={variable.name}
               x={intX}
               y={intY}
-              fontSize="14"
-              textAnchor="start"
-              dominantBaseline="central"
-            >
-              {`${variable.name}: ${variable.value}`}
-            </text>
+              label={variable.name}
+              value={variable.value}
+            />
           );
       }
     });
   };
 
+  const svgHeight = 3 * padding + rectHeight + nonPointerVarY;
+  let userVarHeaderY = 150;
+  const renderUserVarTitle = () => (
+    <text
+      x={padding}
+      y={userVarHeaderY}
+      fontSize="19"
+      textAnchor="start"
+      dominantBaseline="central"
+      fill="black"
+    >
+      User Variables:
+    </text>
+  );
+
   return (
     <div>
-      <svg width="100%" height="100%">
+      <svg width="100%" height={svgHeight}>
         {renderArrayNodes()}
+        {renderUserVarTitle()}
         {renderVariable()}
       </svg>
     </div>
