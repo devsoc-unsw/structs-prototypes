@@ -1,0 +1,7 @@
+.variable {
+    transition: transform 0.5s ease-in-out;
+  }
+  
+  .arrow {
+    transition: transform 0.5s ease-in-out;
+  }

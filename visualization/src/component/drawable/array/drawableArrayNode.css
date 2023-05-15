@@ -1,0 +1,8 @@
+.arrayNode {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+  }
+  
+  .arrayNode.visible {
+    opacity: 1;
+  }
