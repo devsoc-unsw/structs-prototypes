@@ -19,22 +19,24 @@ const App: React.FC = () => {
   const onNextState = () => {
     if (entityData) {
       let variable = entityData.variables;
-      
+
       let array = entityData.dataStructure;
-      let arrayIndex = array.data.findIndex((element) => element.addr === variable[0].addr);
-      
+      let arrayIndex = array.data.findIndex(
+        element => element.addr === variable[0].addr,
+      );
+
       if (arrayIndex !== -1 && arrayIndex + 1 < array.data.length) {
         variable[0].addr = array.data[arrayIndex + 1].addr;
       }
       console.log('Set entity', entityData.variables);
       setHistory([...history, entityData]);
       setEntityData(entityData);
-    } 
+    }
   };
 
   const debug = () => {
     console.log(entityData);
-  }
+  };
 
   const prevState = history.length > 1 ? history[history.length - 2] : null;
   const nextState = entityData;
