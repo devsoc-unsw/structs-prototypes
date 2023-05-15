@@ -34,6 +34,6 @@ export function generateArrayState(): State {
       name: 'curr',
       addr: ds.data[0].addr,
     }],
-    dataStructures: [parseArrayState()],
+    dataStructure: parseArrayState(),
   };
 }

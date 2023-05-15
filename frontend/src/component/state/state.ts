@@ -31,5 +31,5 @@ export type DataStructure = ArrayDataStructure;
 
 export type State = {
   variables: Variable[];
-  dataStructures: DataStructure[];
+  dataStructure: DataStructure;
 }
