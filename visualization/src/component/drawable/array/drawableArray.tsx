@@ -1,17 +1,24 @@
 import React from 'react';
 import { State } from '../../state/state';
 import DrawableArrayNode from './drawableArrayNode';
+<<<<<<< HEAD
 import DrawableVariable from './drawableVaraible';
+=======
+>>>>>>> deb6c8d (add array initialization effect)
 
 type ArrayRendererProps = {
   prevState: State | null;
   nextState: State;
 };
 
+<<<<<<< HEAD
 const ArrayRenderer: React.FC<ArrayRendererProps> = ({
   prevState,
   nextState,
 }) => {
+=======
+const ArrayRenderer: React.FC<ArrayRendererProps> = ({ prevState, nextState }) => {
+>>>>>>> deb6c8d (add array initialization effect)
   const padding = 20;
   const spaceBetweenNodes = 0;
   const rectWidth = 50;

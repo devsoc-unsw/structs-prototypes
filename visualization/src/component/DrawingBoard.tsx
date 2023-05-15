@@ -1,7 +1,9 @@
-import React from 'react';
-import { SupportDataType } from './state/state';
+// Import necessary components and types
+import React, { useEffect } from 'react';
+import { SupportDataType } from './state/state'; // Replace with the actual file name containing your types
 import ArrayRenderer from './drawable/array/drawableArray';
 import { State } from './state/state';
+
 
 type DrawingBoardProps = {
   prevState: State | null;
