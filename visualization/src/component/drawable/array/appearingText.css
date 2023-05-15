@@ -1,0 +1,7 @@
+.text-value {
+  transition: fill 1s ease-in-out;
+}
+
+.text-value.changed {
+  fill: green;
+}

@@ -1,17 +1,17 @@
 import React from 'react';
-import { State } from '../../state/state';
+import { State, VariableType } from '../../state/state';
 import DrawableArrayNode from './drawableArrayNode';
 import DrawableVariable from './drawableVaraible';
+import DrawableIntVariable from './textVariable';
+
+
 
 type ArrayRendererProps = {
   prevState: State | null;
   nextState: State;
 };
 
-const ArrayRenderer: React.FC<ArrayRendererProps> = ({
-  prevState,
-  nextState,
-}) => {
+const ArrayRenderer: React.FC<ArrayRendererProps> = ({ prevState, nextState }) => {
   const padding = 20;
   const spaceBetweenNodes = 0;
   const rectWidth = 50;
@@ -36,26 +36,61 @@ const ArrayRenderer: React.FC<ArrayRendererProps> = ({
     });
   };
 
+  let nonPointerVarY = 140;
   const renderVariable = () => {
-    const variable = nextState.variables[0];
-    if (!variable) return null;
-
-    const targetNode = nextState.dataStructure.data.find(
-      node => node.addr === variable.addr,
-    );
-    if (!targetNode) return null;
-
-    const index = nextState.dataStructure.data.indexOf(targetNode);
-    const x = padding + (rectWidth + spaceBetweenNodes) * index + rectWidth / 2 - 5;
-    const y = 1.5 * padding + rectHeight;
-
-    return <DrawableVariable x={x} y={y} label={variable.name} />;
+    return nextState.variables.map((variable) => {
+      switch (variable.type) {
+        case VariableType.POINTER:
+          const targetNode = nextState.dataStructure.data.find(
+            (node) => node.addr === variable.addr
+          );
+          if (!targetNode) return null;
+      
+          const index = nextState.dataStructure.data.indexOf(targetNode);
+          const x =
+            padding + (rectWidth + spaceBetweenNodes) * index + rectWidth / 2 - 5;
+          const y = 1.5 * padding + rectHeight;
+      
+          return <DrawableVariable key={variable.name} x={x} y={y} label={variable.name} />;
+        case VariableType.INT:
+          const intX = 2.5 * padding;
+          const intY = 2 * padding + nonPointerVarY;
+          nonPointerVarY += 20
+  
+          console.log('Here', `${variable.name}: ${variable.value}`);
+          return (
+            <DrawableIntVariable
+              key={variable.name}
+              x={intX}
+              y={intY}
+              label={variable.name}
+              value={variable.value}
+            />
+          );
+      }
+    });
   };
+
+  const svgHeight = 3 * padding + rectHeight + nonPointerVarY;
+  let userVarHeaderY = 150;
+  const renderUserVarTitle = () => (
+    <text
+      x={padding}
+      y={userVarHeaderY}
+      fontSize="19"
+      textAnchor="start"
+      dominantBaseline="central"
+      fill="black"
+    >
+      User Variables:
+    </text>
+  );
 
   return (
     <div>
-      <svg width="100%" height="100%">
+      <svg width="100%" height={svgHeight}>
         {renderArrayNodes()}
+        {renderUserVarTitle()}
         {renderVariable()}
       </svg>
     </div>
