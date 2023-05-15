@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrayNode } from '../../state/state';
+import './drawableArrayNode.css';
 
 type DrawableArrayNodeProps = {
   node: ArrayNode;
@@ -7,6 +8,7 @@ type DrawableArrayNodeProps = {
   y: number;
   width: number;
   height: number;
+  delay: number;
 };
 
 const DrawableArrayNode: React.FC<DrawableArrayNodeProps> = ({
@@ -15,12 +17,27 @@ const DrawableArrayNode: React.FC<DrawableArrayNodeProps> = ({
   y,
   width,
   height,
+  delay,
 }) => {
   const gridlineColor = 'black';
   const gridlineWidth = 2;
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setVisible(true);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [delay]);
 
   return (
-    <g>
+    <g className={`arrayNode ${visible ? 'visible' : ''}`}
+    style={{
+      transitionDelay: `${delay}ms`,
+    }}>
       <line
         x1={x}
         y1={y}

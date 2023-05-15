@@ -17,6 +17,7 @@ const ArrayRenderer: React.FC<ArrayRendererProps> = ({ prevState, nextState }) =
     return nextState.dataStructure.data.map((node, index) => {
       const x = padding + (rectWidth + spaceBetweenNodes) * index;
       const y = padding;
+      const delay = index * 100; // Adjust this value to change the delay between nodes
       return (
         <DrawableArrayNode
           key={node.addr}
@@ -25,6 +26,7 @@ const ArrayRenderer: React.FC<ArrayRendererProps> = ({ prevState, nextState }) =
           y={y}
           width={rectWidth}
           height={rectHeight}
+          delay={delay}
         />
       );
     });
