@@ -26,7 +26,10 @@ const ArrayRenderer: React.FC<ArrayRendererProps> = ({ arrayData }) => {
       const rect = draw.rect(rectWidth, rectHeight).move(x, y).fill('#f06');
 
       // Add the element value as text inside the rectangle
-      draw.text(element.data.toString()).move(x + rectWidth / 2, y + rectHeight / 2).font({ anchor: 'middle', size: 14 });
+      draw
+        .text(element.data.toString())
+        .move(x + rectWidth / 2, y + rectHeight / 2)
+        .font({ anchor: 'middle', size: 14 });
     });
   }, [arrayData]);
 
