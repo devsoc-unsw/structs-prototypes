@@ -34,10 +34,12 @@ const DrawableArrayNode: React.FC<DrawableArrayNodeProps> = ({
   }, [delay]);
 
   return (
-    <g className={`arrayNode ${visible ? 'visible' : ''}`}
-    style={{
-      transitionDelay: `${delay}ms`,
-    }}>
+    <g
+      className={`arrayNode ${visible ? 'visible' : ''}`}
+      style={{
+        transitionDelay: `${delay}ms`,
+      }}
+    >
       <line
         x1={x}
         y1={y}

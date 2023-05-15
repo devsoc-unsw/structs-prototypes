@@ -4,13 +4,15 @@ import { SupportDataType } from './state/state'; // Replace with the actual file
 import ArrayRenderer from './drawable/array/drawableArray';
 import { State } from './state/state';
 
-
 type DrawingBoardProps = {
   prevState: State | null;
   nextState: State;
 };
 
-const DrawingBoard: React.FC<DrawingBoardProps> = ({ prevState, nextState }) => {
+const DrawingBoard: React.FC<DrawingBoardProps> = ({
+  prevState,
+  nextState,
+}) => {
   const renderDataStructure = () => {
     switch (nextState.dataStructure.type) {
       case SupportDataType.ARRAY:
