@@ -8,28 +8,14 @@
 <head>
   <meta charset="utf-8">
   <title>Force-Directed Graph</title>
-  <style>
-    /* Add any CSS styles here */
-  </style>
 </head>
-<!-- <body style="background-color:#d3d3d3"> -->
-<body>  
+<body style="background-color:#EAFFD0">  
     <div id="container" style="display: flex;">
         <svg id="svg" style="width: 80%; height: 200%;"></svg>
         <div id="textContainer" style="width: 20%;"></div>
     </div>
-    <svg>
-        <defs>
-          <marker id="arrowhead" markerWidth="10" markerHeight="7"
-            refX="20" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" />
-          </marker>
-        </defs>
-        <!-- Your graph elements -->
-      </svg>
       <script src="https://d3js.org/d3.v4.min.js"></script>
   <script>
-    // 11ur D3.js code here
 
     var baseNodes = [
   { id: "0", group: 0, label: "0", level: 1 },
@@ -47,15 +33,15 @@
 
 let adjList = [
     {id: "0", neighbours: ["1", "2", "3", "4"]},
-    {id: "5", neighbours: ["6", "7"]},
-    {id: "8", neighbours: ["9", "10"]},
-    {id: "2", neighbours: ["4"]},
-    {id: "9", neighbours: ["6"]},
-    {id: "4", neighbours: ["7"]},
     {id: "1", neighbours: ["0", "2"]},
+    {id: "2", neighbours: ["4"]},
     {id: "3", neighbours: ["6"]},
+    {id: "4", neighbours: ["7"]},
+    {id: "5", neighbours: ["6", "7"]},
     {id: "6", neighbours: []},
     {id: "7", neighbours: []},
+    {id: "8", neighbours: ["9", "10"]},
+    {id: "9", neighbours: ["6"]},
     {id: "10", neighbours: []},
 ]
 
@@ -66,8 +52,8 @@ var baseLinks = [];
     adjList.forEach(node => {
         node.neighbours.forEach(neighbour => {
             baseLinks.push({
-                target: node.id,
-                source: neighbour,
+                source: node.id,
+                target: neighbour,
                 strength: 0.1,
                 // weight: '1'
             })
@@ -126,6 +112,14 @@ var simulation = d3
   .force('charge', d3.forceManyBody().strength(-120))
   .force('center', d3.forceCenter(width / 2, height / 2))
 
+  // TODO move everything towards centre -> helps prevent nodes from going out of canvas, but causes everything 
+  // to be closer together
+  // mebe find better way
+  .force('x', d3.forceX(width / 2).strength(0.005)) // Add force to keep nodes in horizontal bounds
+  .force('y', d3.forceY(height / 2).strength(0.005)) // Add force to keep nodes in vertical bounds
+  .force('collision', d3.forceCollide().radius(42)); // Add force to prevent node overlap
+
+
 var dragDrop = d3.drag().on('start', function (node) {
   node.fx = node.x
   node.fy = node.y
@@ -147,16 +141,20 @@ function updateGraph() {
     .data(nodes, function (node) { return node.id })
     .style("font-family", "Helvetica")
 
-  textElements.exit().remove()
-
+    textElements.exit()
+    .transition()
+    .duration(700) // Duration of the transition effect in milliseconds
+    .style('opacity', 0) // Fade out the edge gradually
+    .remove()
   var textEnter = textElements
     .enter()
     .append('text')
     .text(function (node) { return node.label })
-    .attr('font-size', 15)
+    .attr('font-size', 20)
     .attr('dx', 0)
     .attr('dy', 5)
     .attr('fill', 'white')
+    .style('pointer-events', 'none');
 
 
   textElements = textEnter.merge(textElements)
@@ -177,19 +175,39 @@ function updateGraph() {
       return link.target.id + link.source.id
     })
 
-  linkElements.exit().remove()
+    linkElements.exit()
+    .transition()
+    .duration(700) // Duration of the transition effect in milliseconds
+    .style('opacity', 0) // Fade out the edge gradually
+    .remove()
+
+
+    svg.append('defs').append('marker')
+  .attr('id', 'arrowhead')
+  .attr('viewBox', '-0 -5 10 10')
+  .attr('refX', 16)
+  .attr('refY', 0)
+  .attr('orient', 'auto')
+  .attr('markerWidth', 3) // adjust this value as needed
+  .attr('markerHeight', 3) // adjust this value as needed
+  .append('svg:path')
+  .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+  .attr('fill', 'black')
+  .style('stroke', 'none');
+
 
   var linkEnter = linkElements
     .enter().append('line')
-    .attr('stroke-width', 1)
-  .attr('stroke', 'rgba(50, 50, 50, 0.2)')
+    .attr('stroke-width', 5)
+  .attr('stroke', 'black')
   .attr('marker-end', isDirectedGraph ? 'url(#arrowhead)' : null)
   .attr('x1', function (link) { return link.source.x })
   .attr('y1', function (link) { return link.source.y })
   .attr('x2', function (link) { return link.target.x })
   .attr('y2', function (link) { return link.target.y })
-  
+
   linkElements = linkEnter.merge(linkElements)
+
 
   
 
@@ -197,26 +215,27 @@ function updateGraph() {
   nodeElements = nodeGroup.selectAll('circle')
     .data(nodes, function (node) { return node.id })
 
-  nodeElements.exit().remove()
-
+    nodeElements.exit()
+    .transition()
+    .duration(700) // Duration of the transition effect in milliseconds
+    .style('opacity', 0) // Fade out the edge gradually
+    .remove()
   var nodeEnter = nodeElements
     .enter()
     .append('circle')
-    .attr('r', 10)
-    .attr('fill', 'gray')
-    // .attr('fill', function (node) { return node.level === 1 ? 'red' : 'gray' })
+    .attr('r', 13)
+    .attr('stroke', 'black') // Add a black border
+    .attr('stroke-width', 2) // Set the border width to 2 pixels
     .call(dragDrop)
 
   nodeElements = nodeEnter.merge(nodeElements)
 
     // Update node color based on level
     nodeElements
-    .transition()
-    .duration(0) // longer time for gradual highlighting doesn't work rn
-    .attr('fill', node => { return highlightedNodes.includes(node.id) ? '#BC544B' : '#73A5C6' })
-
-
+    .style('transition', 'fill 0.7s ease') // CSS transition for fill color
+    .style('fill', node => highlightedNodes.includes(node.id) ? '#cc1076' : '#AA96DA');
 }
+
 
 
 function updateSimulation() {
@@ -226,22 +245,22 @@ function updateSimulation() {
     nodeElements
       .transition() // Apply transition
       .duration(50) // Set duration in milliseconds
-      .attr('cx', function (node) { return node.x })
-      .attr('cy', function (node) { return node.y });
+      .attr('cx', function (node) { return Math.min(node.x, width * 0.7)})
+      .attr('cy', function (node) { return Math.min(node.y, height * 0.75)});
       
     textElements
       .transition()
       .duration(50)
-      .attr('x', function (node) { return node.x })
-      .attr('y', function (node) { return node.y });
+      .attr('x', function (node) { return Math.min(node.x, width * 0.7) })
+      .attr('y', function (node) { return Math.min(node.y, height * 0.75) });
       
     linkElements
       .transition()
       .duration(50)
-      .attr('x1', function (link) { return link.source.x })
-      .attr('y1', function (link) { return link.source.y })
-      .attr('x2', function (link) { return link.target.x })
-      .attr('y2', function (link) { return link.target.y });
+      .attr('x1', function (link) { return Math.min(link.source.x, width * 0.7)})
+      .attr('y1', function (link) { return Math.min(link.source.y, height * 0.75) })
+      .attr('x2', function (link) { return Math.min(link.target.x, width * 0.7) })
+      .attr('y2', function (link) { return Math.min(link.target.y, height * 0.75) });
   });
 
   simulation.force('link').links(links);
@@ -258,10 +277,10 @@ var textContainer = d3.select("#textContainer");
 function updateText() {
   let adjListString = '<strong style="font-weight: bold; font-family: \'Open Sans\', sans-serif;">Adjacency list representation:</strong><br>';
   adjList.forEach(node => {
-    adjListString += '<span style="font-weight: bold; color: #BC544B; font-family: \'Open Sans\', sans-serif;">' + node['id'] + ':</span> ';
+    adjListString += '<span style="font-weight: bold; color: #a503c0; font-family: \'Open Sans\', sans-serif;">' + node['id'] + ':</span> ';
     node.neighbours.forEach((neighbour, index) => {
-      adjListString += '<span style="color: #73A5C6; font-family: \'Open Sans\', sans-serif;">' + neighbour + '</span>';
-      adjListString += index < node.neighbours.length - 1 ? ' <span style="color: #73A5C6; font-family: \'Open Sans\', sans-serif;">⇨</span> ' : '';
+      adjListString += '<span style="color: #a503c0; font-family: \'Open Sans\', sans-serif;">' + neighbour + '</span>';
+      adjListString += index < node.neighbours.length - 1 ? ' <span style="color: #a503c0; font-family: \'Open Sans\', sans-serif;">⇨</span> ' : '';
     });
     adjListString += '<br>';
   });
@@ -269,62 +288,110 @@ function updateText() {
 }
 
 
+// updates the array of edges to match the adjacency list
+// doesnt work rn
+// const updateLinks = () => {
+//     for (const list of adjList) {
+//         for (const neighbour of list.neighbours) {
+//             if (!links.find(link => link.source === list.id && link.target === neighbour)) {
+//                 links.push({target: neighbour, source: list.id, strength: 0.1 });
+//             }
+//         }
+//     }
+//     for (const link of links) {
+//         list = adjList.find(item => item.id === link.source.id);
+//         if (!list.neighbours.includes(link.target.id)) {
+//             const index = links.findIndex(item => item.source.id === link.source.id && item.target.id === link.target.id);
+//             if (index !== -1) {
+//               links.splice(index, 1);
+//             }      
+//         }
+//     }
+// }
+
+
 updateText();
 
 
-
+updateGraph()
 // Mock tests
+
+
 setTimeout(function() {
-    links.push({ target: "10"  , source: "2" , strength: 0.1 })
-    adjList.find(node => node.id === "10").neighbours.push("2");
-    updateText();
-    highlightedNodes.push('0')
+    links.push({ target: "10"  , source: "5" , strength: 0.1 })
+    adjList[5].neighbours.push("10")
+    updateText()
     updateSimulation()
-
-    // updateTableData(data)
-
 }, 3000);
 
 setTimeout(function() {
-    highlightedNodes.pop()
-    highlightedNodes.push('6')
-    nodes.push({id: '11', group: 0, label: '11', level: 1})
-    adjList.push({id: "11", neighbours: []});
-    links.push({ target: "10"  , source: "11" , strength: 0.1 })
-    adjList.find(node => node.id === "11").neighbours.push("10");
-    updateText();
+    nodes.push({id: "11", label: "11"})
+    adjList.push({id: "11", neighbours: []})
+    updateText()
     updateSimulation()
 }, 5000);
 
 setTimeout(function() {
-    highlightedNodes.pop();
-    highlightedNodes.push('5')
-    updateSimulation()
-}, 6000);
-setTimeout(function() {
-    highlightedNodes.pop();
-    highlightedNodes.push('7')
-    updateSimulation()
+    links.push({ target: "11"  , source: "7" , strength: 0.1 });
+    adjList[7].neighbours.push("11");
+    updateText();
+    updateSimulation();
 }, 7000);
+
 setTimeout(function() {
-    highlightedNodes.pop();
-    highlightedNodes.push('4')
-    updateSimulation()
-}, 8000);
-setTimeout(function() {
-    highlightedNodes.pop();
-    highlightedNodes.push('2')
+    highlightedNodes.push('0')
     updateSimulation()
 }, 9000);
+
 setTimeout(function() {
-    highlightedNodes.pop();
-    highlightedNodes.push('10');
-    nodes.pop();
-    links.pop();
-    adjList.pop();
-    updateText();
+    highlightedNodes.push('1')
     updateSimulation()
 }, 10000);
+
+setTimeout(function() {
+    highlightedNodes.push('2')
+    updateSimulation()
+}, 11000);
+
+setTimeout(function() {
+    highlightedNodes.push('4')
+    updateSimulation()
+}, 12000);
+
+setTimeout(function() {
+    highlightedNodes.push('7')
+    updateSimulation()
+}, 13000);
+
+setTimeout(function() {
+    highlightedNodes.push('11')
+    updateSimulation()
+}, 14000);
+
+setTimeout(function() {
+    highlightedNodes.push('3')
+    updateSimulation()
+}, 15000);
+
+setTimeout(function() {
+    highlightedNodes.push('6')
+    updateSimulation()
+}, 16000);
+
+setTimeout(function() {
+    highlightedNodes = []
+    updateSimulation()
+}, 18000);
+
+setTimeout(function() {
+  nodes.splice(5, 1);
+  links.splice(9, 1);
+  links.splice(9, 1);
+  links.splice(12, 1);
+  adjList.splice(5, 1);
+  updateText();
+  updateSimulation()
+}, 20000);
 
   </script>
 </body>
@@ -355,4 +422,7 @@ setTimeout(function() {
       circles can be dragged
     - refactor code to ts, clean up, add more comments
     - look into using svg.js for the node objects
+    - fix the adj list interface 
+    ↳ rn need to directly change array of edges
+    - prevent nodes and edges from going too far up
  -->
