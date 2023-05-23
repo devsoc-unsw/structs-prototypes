@@ -18,17 +18,17 @@
   <script>
 
     var baseNodes = [
-  { id: "0", group: 0, label: "0", level: 1 },
-  { id: "1"   , group: 0, label: "1"   , level: 2 },
-  { id: "2"   , group: 0, label: "2"   , level: 2 },
-  { id: "3"   , group: 0, label: "3"  , level: 2 },
-  { id: "4"   , group: 0, label: "4"    , level: 2 },
-  { id: "5", group: 1, label: "5", level: 1 },
-  { id: "6"   , group: 1, label: "6"   , level: 2 },
-  { id: "7"   , group: 1, label: "7"   , level: 2 },
-  { id: "8"  , group: 2, label: "8"   , level: 1 },
-  { id: "9"  , group: 2, label: "9"   , level: 2 },
-  { id: "10"  , group: 2, label: "10"  , level: 2 }
+  { id: "0", label: "0" },
+  { id: "1", label: "1" },
+  { id: "2", label: "2" },
+  { id: "3", label: "3" },
+  { id: "4", label: "4" },
+  { id: "5", label: "5" },
+  { id: "6", label: "6" },
+  { id: "7", label: "7" },
+  { id: "8", label: "8" },
+  { id: "9", label: "9" },
+  { id: "10", label: "10" }
 ]
 
 let adjList = [
@@ -112,9 +112,9 @@ var simulation = d3
   .force('charge', d3.forceManyBody().strength(-120))
   .force('center', d3.forceCenter(width / 2, height / 2))
 
-  // TODO move everything towards centre -> helps prevent nodes from going out of canvas, but causes everything 
+  // moves everything towards centre -> helps prevent nodes from going out of canvas, but causes everything 
   // to be closer together
-  // mebe find better way
+  // TODO: mebe find better way
   .force('x', d3.forceX(width / 2).strength(0.005)) // Add force to keep nodes in horizontal bounds
   .force('y', d3.forceY(height / 2).strength(0.005)) // Add force to keep nodes in vertical bounds
   .force('collision', d3.forceCollide().radius(42)); // Add force to prevent node overlap
@@ -289,37 +289,45 @@ function updateText() {
 
 
 // updates the array of edges to match the adjacency list
-// doesnt work rn
-// const updateLinks = () => {
-//     for (const list of adjList) {
-//         for (const neighbour of list.neighbours) {
-//             if (!links.find(link => link.source === list.id && link.target === neighbour)) {
-//                 links.push({target: neighbour, source: list.id, strength: 0.1 });
-//             }
-//         }
-//     }
-//     for (const link of links) {
-//         list = adjList.find(item => item.id === link.source.id);
-//         if (!list.neighbours.includes(link.target.id)) {
-//             const index = links.findIndex(item => item.source.id === link.source.id && item.target.id === link.target.id);
-//             if (index !== -1) {
-//               links.splice(index, 1);
-//             }      
-//         }
-//     }
-// }
+const updateLinks = () => {
+
+  // traverse links in the adj list
+  // if link is not in the array of edges, add link to array of edges
+  for (let i = links.length - 1; i >=0 ; i --) {
+    const link = links[i]
+      let list = adjList.find(item => item.id === link.source.id);
+      if (!list) {
+        const index = links.findIndex(item => item.source.id === link.source.id && item.target.id === link.target.id);
+        links.splice(index, 1)
+      }
+      else if (!list.neighbours.includes(link.target.id)) {
+          const index = links.findIndex(item => item.source.id === link.source.id && item.target.id === link.target.id);
+          if (index !== -1) {
+            links.splice(index, 1);
+          }      
+      }
+  }
+
+  // traverse links in the array of edges
+  // if link is not in the adj list, remove link from the array of edges 
+  for (const list of adjList) {
+      for (const neighbour of list.neighbours) {          
+          if (!links.find(link => link.source.id === list.id && link.target.id === neighbour)) {
+              links.push({target: neighbour, source: list.id, strength: 0.1 });
+          }
+      }
+  }
+}
 
 
 updateText();
-
-
 updateGraph()
+
 // Mock tests
 
-
-setTimeout(function() {
-    links.push({ target: "10"  , source: "5" , strength: 0.1 })
+  setTimeout(function() {
     adjList[5].neighbours.push("10")
+    updateLinks();
     updateText()
     updateSimulation()
 }, 3000);
@@ -332,8 +340,8 @@ setTimeout(function() {
 }, 5000);
 
 setTimeout(function() {
-    links.push({ target: "11"  , source: "7" , strength: 0.1 });
     adjList[7].neighbours.push("11");
+    updateLinks()
     updateText();
     updateSimulation();
 }, 7000);
@@ -384,45 +392,48 @@ setTimeout(function() {
 }, 18000);
 
 setTimeout(function() {
-  nodes.splice(5, 1);
-  links.splice(9, 1);
-  links.splice(9, 1);
-  links.splice(12, 1);
-  adjList.splice(5, 1);
-  updateText();
-  updateSimulation()
+    adjList.splice(adjList.findIndex(item => item.id === '5'), 1);
+    nodes.splice(nodes.findIndex(item => item.id === '5'), 1);
+    updateLinks();
+    updateText()
+    updateSimulation()
 }, 20000);
+
 
   </script>
 </body>
 </html>
 
 
-<!-- 
-    - Animate adding new link gradually                 done
-    - Highlight and unhighlight a node                  done
+<!-- issues & todo:
     - Support weighted graphs
-    - Add arrows to edges                               done
-    - support bidirectional edges                       done
-    - Support undirected graphs (kinda works alr)       done
-    - Refine nodes and edges data representation
-    - make graph move around less                       done
-    - highlight nodes + texts gradually
-    - visualise adding a node                           done
-    - visualise removing a node                         done
-    - visualise changes gradually
-    - ensure everything remains on screen
-    - ↳ support disjoint graphs better
-    - show adj list                                     done
-    - format adj list better
-    - remove on click functionality                     done
-    - changelog?
-    - display node ids in circles                       done
-    - position text underneath circles so 
-      circles can be dragged
+    - look into other ways to make everything remain on screen
+    - see if disjointed graphs work
+    - changelog? describing changes to graph
     - refactor code to ts, clean up, add more comments
     - look into using svg.js for the node objects
-    - fix the adj list interface 
-    ↳ rn need to directly change array of edges
+    - think about expected gdp format and update nodes, 
+      adj list and highlighted nodes interface accordingly
     - prevent nodes and edges from going too far up
+    - fix font issue - new nodes have different 
+      (default) font, font changes only after an edge 
+      is added with that node
+    - Animate adding new link gradually                              done
+    - Highlight and unhighlight a node                               done
+    - Add arrows to edges                                            done
+    - support bidirectional edges                                    done
+    - Support undirected graphs (kinda works alr)                    done
+    - make graph move around less                                    done
+    - visualise adding a node                                        done
+    - visualise removing a node                                      done
+    - show adj list                                                  done
+    - remove on click functionality                                  done
+    - display node ids in circles                                    done
+    - position text underneath circles so                            done
+      circles can be dragged              
+    - display node ids in circles                                    done
+    - position text underneath circles so                            done
+      circles can be dragged              
+    - visualise changes gradually                                    done
+
  -->
