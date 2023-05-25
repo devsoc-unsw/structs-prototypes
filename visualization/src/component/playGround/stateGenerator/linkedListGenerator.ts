@@ -4,6 +4,19 @@ export function genAddr(): string {
   return `0x${(1000000 + Math.floor(Math.random() * 1000000)).toString(16)}`;
 }
 
+function deepCloneState(state: LinkedListDataState): LinkedListDataState {
+  let nodes = Array.from(state.dataStructure.data);
+  const newState = {
+    variables: state.variables.map(v => ({ ...v })),
+    dataStructure: {
+      type: state.dataStructure.type,
+      data: new Set([...nodes].map(node => ({ ...node }))),
+    },
+  };
+
+  return newState;
+}
+
 function generateLinkedList(size: number = 5): LinkedListDataState {
   // Generate data for LinkedList
   let linkedListNodes = new Set<LinkedListNode>();
@@ -48,7 +61,7 @@ function generateLinkedList(size: number = 5): LinkedListDataState {
 
 function appendNode(state: LinkedListDataState): LinkedListDataState {
   // Clone the state to avoid mutating the original state
-  let newState = JSON.parse(JSON.stringify(state)) as LinkedListDataState;
+  let newState = deepCloneState(state);
 
   // Generate address for the new node
   let newNodeAddr = genAddr();
@@ -78,7 +91,7 @@ function appendNode(state: LinkedListDataState): LinkedListDataState {
 
 function insertNode(state: LinkedListDataState, idx: number): LinkedListDataState {
   // Clone the state to avoid mutating the original state
-  let newState = JSON.parse(JSON.stringify(state)) as LinkedListDataState;
+  let newState = deepCloneState(state);
 
   // Generate address for the new node
   let newNodeAddr = genAddr();
@@ -114,7 +127,7 @@ function insertNode(state: LinkedListDataState, idx: number): LinkedListDataStat
 
 function removeNode(state: LinkedListDataState, idx: number): LinkedListDataState {
   // Clone the state to avoid mutating the original state
-  let newState = JSON.parse(JSON.stringify(state)) as LinkedListDataState;
+  let newState = deepCloneState(state);
 
   // Convert the Set to an array for easier manipulation
   let nodes = Array.from(newState.dataStructure.data);
