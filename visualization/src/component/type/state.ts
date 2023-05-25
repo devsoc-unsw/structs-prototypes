@@ -1,6 +1,9 @@
 export enum VariableType {
+  // SHared between all data structure
   POINTER = 'pointer',
   INT = 'int',
+  // Will be only used in graph
+  STATE = 'state',
 }
 
 export type PointerVariable = {
@@ -40,7 +43,18 @@ export type ArrayDataStructure = {
   data: ArrayNode[];
 };
 
-export type DataStructure = ArrayDataStructure;
+export type LinkedListNode = {
+  addr: string;
+  data: string;
+  next: string;
+}
+
+export type LinkedListDataStructure = {
+  type: SupportDataType.LINKED_LIST;
+  data: Set<LinkedListNode>;
+}
+
+export type DataStructure = ArrayDataStructure | LinkedListDataStructure;
 
 export type State = {
   variables: Variable[];
