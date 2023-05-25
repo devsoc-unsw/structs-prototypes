@@ -1,5 +1,5 @@
 import React from 'react';
-import { SupportDataType } from './type/state';
+import { ArrayDataState, SupportDataType } from './type/state';
 import ArrayRenderer from './drawable/array/drawableArray';
 import { State } from './type/state';
 
@@ -12,7 +12,7 @@ const DrawingBoard: React.FC<DrawingBoardProps> = ({ prevState, nextState }) => 
   const renderDataStructure = () => {
     switch (nextState.dataStructure.type) {
       case SupportDataType.ARRAY:
-        return <ArrayRenderer prevState={prevState} nextState={nextState} />;
+        return <ArrayRenderer prevState={prevState as ArrayDataState} nextState={nextState as ArrayDataState} />;
       default:
         return <div>Unsupported data structure type</div>;
     }

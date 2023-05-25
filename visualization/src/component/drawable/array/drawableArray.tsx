@@ -1,5 +1,5 @@
 import React from 'react';
-import { State, VariableType } from '../../type/state';
+import { ArrayDataState, State, VariableType } from '../../type/state';
 import DrawableArrayNode from './drawableArrayNode';
 import DrawableVariable from './drawableVaraible';
 import DrawableIntVariable from './textVariable';
@@ -7,8 +7,8 @@ import DrawableIntVariable from './textVariable';
 
 
 type ArrayRendererProps = {
-  prevState: State | null;
-  nextState: State;
+  prevState: ArrayDataState | null;
+  nextState: ArrayDataState;
 };
 
 const ArrayRenderer: React.FC<ArrayRendererProps> = ({ prevState, nextState }) => {
@@ -57,7 +57,6 @@ const ArrayRenderer: React.FC<ArrayRendererProps> = ({ prevState, nextState }) =
           const intY = 2 * padding + nonPointerVarY;
           nonPointerVarY += 20
   
-          console.log('Here', `${variable.name}: ${variable.value}`);
           return (
             <DrawableIntVariable
               key={variable.name}

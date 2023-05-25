@@ -1,4 +1,4 @@
-import { ArrayNode, ArrayDataStructure, SupportDataType, State, VariableType } from './state'; // Replace with the actual file name containing your types
+import { ArrayNode, ArrayDataStructure, SupportDataType, State, VariableType, ArrayDataState } from './state'; // Replace with the actual file name containing your types
 
 function generateRandomArrayData(
   minValue: number,
@@ -60,7 +60,7 @@ export function parseArrayState(isOrder: boolean): ArrayDataStructure {
   }
 }
 
-export function generateArrayState(): State {
+export function generateArrayState(): ArrayDataState {
   let ds = parseArrayState(false);
   return {
     variables: [
@@ -75,7 +75,7 @@ export function generateArrayState(): State {
   };
 }
 
-export function generateIncreArrayState(): State {
+export function generateIncreArrayState(): ArrayDataState {
   let ds = parseArrayState(true);
   return {
     variables: [
