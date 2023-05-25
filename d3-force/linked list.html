@@ -1,0 +1,357 @@
+<!-- 
+    Adapted from:
+    https://github.com/ninjaconcept/d3-force-directed-graph/blob/master/example/4-dynamic-updates.html 
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Force-Directed Graph</title>
+</head>
+<body style="background-color:#EAFFD0">  
+    <svg id="svg" style="width: 100%; height: 200%;"></svg>
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script>
+
+    var baseNodes = [
+  { id: "0", label: "0" },
+  { id: "1", label: "1" },
+  { id: "2", label: "2" },
+  { id: "3", label: "3" },
+  { id: "4", label: "4" },
+  { id: "5", label: "5" },
+  { id: "6", label: "6" },
+  { id: "7", label: "7" },
+  { id: "8", label: "8" },
+]
+
+var baseLinks = [
+    {
+        "source": "0",
+        "target": "1",
+        "strength": 0.1
+    },
+    {
+        "source": "1",
+        "target": "2",
+        "strength": 0.1
+    },
+    {
+        "source": "2",
+        "target": "3",
+        "strength": 0.1
+    },
+    {
+        "source": "3",
+        "target": "4",
+        "strength": 0.1
+    },
+    {
+        "source": "4",
+        "target": "5",
+        "strength": 0.1
+    },
+    {
+        "source": "5",
+        "target": "6",
+        "strength": 0.1
+    },
+    {
+        "source": "6",
+        "target": "7",
+        "strength": 0.1
+    },
+    {
+        "source": "7",
+        "target": "8",
+        "strength": 0.1
+    }
+]
+
+for (const item of baseLinks) {item.strength = 2.1}
+
+setTimeout(function() {
+  for (const item of baseLinks) {item.strength = 0.1}
+  updateSimulation()
+}, 100);
+
+
+// var baseLinks = [
+// 	{ target: "0", source: "1" , strength: 0.1 },
+// 	{ target: "0", source: "2" , strength: 0.1 },
+//   { target: "0", source: "3" , strength: 0.1 },
+//   { target: "0", source: "4" , strength: 0.1 },
+//   { target: "5", source: "6" , strength: 0.1 },
+//   { target: "5", source: "7" , strength: 0.1 },
+//   { target: "8"  , source: "9", strength: 0.1 },
+//   { target: "8"  , source: "10", strength: 0.1 },
+//   { target: "2"   , source: "4" , strength: 0.1 },
+//   { target: "9"  , source: "6" , strength: 0.1 },
+//   { target: "4"   , source: "7" , strength: 0.1 },
+//   { target: "1"   , source: "2" , strength: 0.1 },
+//   { target: "3"   , source: "6" , strength: 0.1 },
+// ]
+
+var nodes = [...baseNodes]
+var links = [...baseLinks]
+
+var highlightedNodes = []
+
+var width = window.innerWidth
+var height = window.innerHeight
+
+var svg = d3.select('svg')
+svg.attr('width', width).attr('height', height)
+
+var linkElements,
+  nodeElements,
+  textElements
+
+// we use svg groups to logically group the elements together
+var linkGroup = svg.append('g').attr('class', 'links')
+var nodeGroup = svg.append('g').attr('class', 'nodes')
+var textGroup = svg.append('g').attr('class', 'texts')
+
+// we use this reference to select/deselect
+// after clicking the same element twice
+var selectedId
+
+// simulation setup with all forces
+var linkForce = d3
+  .forceLink()
+  .id(function (link) { return link.id })
+  .strength(function (link) { return link.strength })
+
+var simulation = d3
+  .forceSimulation()
+  .force('link', linkForce)
+  .force('charge', d3.forceManyBody().strength(-500))
+  .force('center', d3.forceCenter(width / 2, height / 2))
+
+  // moves everything towards centre -> helps prevent nodes from going out of canvas, but causes everything 
+  // to be closer together
+  // TODO: mebe find better way
+  .force('x', d3.forceX(width / 2).strength(0.01)) // Add force to keep nodes in horizontal bounds
+  .force('y', d3.forceY(height / 2).strength(0.01)) // Add force to keep nodes in vertical bounds
+  .force('collision', d3.forceCollide().radius(60)) // Add force to prevent node overlap
+
+var dragDrop = d3.drag().on('start', function (node) {
+  node.fx = node.x
+  node.fy = node.y
+}).on('drag', function (node) {
+  simulation.alphaTarget(0.2).restart()
+  node.fx = d3.event.x
+  node.fy = d3.event.y
+}).on('end', function (node) {
+  if (!d3.event.active) {
+    simulation.alphaTarget(0)
+  }
+  node.fx = null
+  node.fy = null
+})
+
+function updateGraph() {
+  // texts
+  textElements = textGroup.selectAll('text')
+    .data(nodes, function (node) { return node.id })
+    .style("font-family", "Helvetica")
+
+    textElements.exit()
+    .transition()
+    .duration(700) // Duration of the transition effect in milliseconds
+    .style('opacity', 0) // Fade out the edge gradually
+    .remove()
+  var textEnter = textElements
+    .enter()
+    .append('text')
+    .text(function (node) { return node.label })
+    .attr('font-size', 20)
+    .attr('dx', 0)
+    .attr('dy', 5)
+    .attr('fill', 'white')
+    .style('pointer-events', 'none');
+
+
+  textElements = textEnter.merge(textElements)
+
+  // Update text content based on node labels
+  textElements
+    .text(function (node) { return node.label })
+
+    // Additional styling for text inside the circles
+  textElements
+    .attr('text-anchor', 'middle') // Center the text horizontally
+    .attr('domin6-baseline', 'middle') // Center the text vertically
+
+
+  // links
+  linkElements = linkGroup.selectAll('line')
+    .data(links, function (link) {
+      return link.target.id + link.source.id
+    })
+
+    linkElements.exit()
+    .transition()
+    .duration(700) // Duration of the transition effect in milliseconds
+    .style('opacity', 0) // Fade out the edge gradually
+    .remove()
+
+
+    svg.append('defs').append('marker')
+  .attr('id', 'arrowhead')
+  .attr('viewBox', '-0 -5 10 10')
+  .attr('refX', 16)
+  .attr('refY', 0)
+  .attr('orient', 'auto')
+  .attr('markerWidth', 3) // adjust this value as needed
+  .attr('markerHeight', 3) // adjust this value as needed
+  .append('svg:path')
+  .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+  .attr('fill', 'black')
+  .style('stroke', 'none');
+
+
+  var linkEnter = linkElements
+    .enter().append('line')
+    .attr('stroke-width', 5)
+  .attr('stroke', 'black')
+  .attr('marker-end','url(#arrowhead)')
+  .attr('x1', function (link) { return link.source.x })
+  .attr('y1', function (link) { return link.source.y })
+  .attr('x2', function (link) { return link.target.x })
+  .attr('y2', function (link) { return link.target.y })
+
+  linkElements = linkEnter.merge(linkElements)
+
+
+  
+
+  // nodes
+  nodeElements = nodeGroup.selectAll('circle')
+    .data(nodes, function (node) { return node.id })
+
+    nodeElements.exit()
+    .transition()
+    .duration(700) // Duration of the transition effect in milliseconds
+    .style('opacity', 0) // Fade out the edge gradually
+    .remove()
+  var nodeEnter = nodeElements
+    .enter()
+    .append('circle')
+    .attr('r', 13)
+    .attr('stroke', 'black') // Add a black border
+    .attr('stroke-width', 2) // Set the border width to 2 pixels
+    .call(dragDrop)
+
+  nodeElements = nodeEnter.merge(nodeElements)
+
+    // Update node color based on level
+    nodeElements
+    .style('transition', 'fill 0.7s ease') // CSS transition for fill color
+    .style('fill', node => highlightedNodes.includes(node.id) ? '#cc1076' : '#AA96DA');
+}
+
+
+
+function updateSimulation() {
+  updateGraph();
+
+  simulation.nodes(nodes).on('tick', () => {
+    nodeElements
+      .transition() // Apply transition
+      .duration(50) // Set duration in milliseconds
+      .attr('cx', function (node) { return Math.min(node.x, width)})
+      .attr('cy', function (node) { return Math.min(node.y, height * 0.9)});
+      
+    textElements
+      .transition()
+      .duration(50)
+      .attr('x', function (node) { return Math.min(node.x, width) })
+      .attr('y', function (node) { return Math.min(node.y, height * 0.9) });
+      
+    linkElements
+      .transition()
+      .duration(50)
+      .attr('x1', function (link) { return Math.min(link.source.x, width)})
+      .attr('y1', function (link) { return Math.min(link.source.y, height * 0.9) })
+      .attr('x2', function (link) { return Math.min(link.target.x, width) })
+      .attr('y2', function (link) { return Math.min(link.target.y, height * 0.9) });
+  });
+
+  simulation.force('link').links(links);
+  simulation.alphaTarget(0.4).restart();
+}
+
+
+// last but not least, we call updateSimulation
+// to trigger the initial render
+updateSimulation()
+
+updateGraph()
+
+// Mock tests
+
+// add lone node initialised with no next
+setTimeout(function() {
+  nodes.push({id: "9", label: "9"})
+  updateSimulation()
+}, 6000);
+
+// add node initialised with the head of the linked list
+setTimeout(function() {
+  nodes.push({id: "10", label: "10"})
+  links.push({source: "10", target: "0", strength: 0.1})
+  updateSimulation()
+}, 8000);
+
+// add node initialised with some node in middle of linked list
+setTimeout(function() {
+  nodes.push({id: "11", label: "11"})
+  links.push({source: "11", target: "4", strength: 0.1})
+  updateSimulation()
+}, 10000);
+
+// // change node value
+// setTimeout(function() {
+//   nodes[3].label = "42"
+//   updateSimulation()
+// }, 12000);
+
+// change node next, was a lone node
+setTimeout(function() {
+  links.push({source: "9", target: "5", strength: 0.1})
+  updateSimulation()
+}, 12000);
+
+// change node next
+setTimeout(function() {
+  links[3].target = "10"
+  updateSimulation()
+}, 14000);
+
+// highlight node
+setTimeout(function() {
+  highlightedNodes.push("3")
+  updateSimulation()
+}, 16000);
+  </script>
+</body>
+</html>
+
+
+<!-- issues & todo:
+
+    - make changing a node's value animate gradually
+    - arrange linked list in a straight line
+    - create a data structure representing expected gdb output, and write code to determine how to change array of edges and nodes array accordingly
+
+
+    - look into other ways to make everything remain on screen
+    - refactor code to ts, clean up, add more comments
+    - look into using svg.js for the node objects
+    - prevent nodes and edges from going too far up
+    - fix font issue - new nodes have different 
+      (default) font, font changes only after an edge 
+      is added with that node
+ -->
