@@ -61,6 +61,11 @@ export type ArrayDataState = {
   dataStructure: ArrayDataStructure;
 }
 
+export type LinkedListDataState = {
+  variables: Variable[];
+  dataStructure: LinkedListDataStructure;
+}
+
 export type State = {
   variables: Variable[];
   dataStructure: DataStructure;

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import DrawingBoard from './DrawingBoard';
-import { generateArrayState, generateIncreArrayState } from './type/arrayDsParser';
-import { ArrayDataState, State, VariableType } from './type/state';
-import "../App.css"
+import DrawingBoard from '../DrawingBoard';
+import { generateArrayState, generateIncreArrayState } from '../type/arrayDsParser';
+import { ArrayDataState, State, VariableType } from '../type/state';
+import "../../App.css"
 
 const PlayGround: React.FC = () => {
   const [currState, setEntityData] = useState<ArrayDataState | null>(null);
