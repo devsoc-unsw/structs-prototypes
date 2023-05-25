@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrayNode } from '../../state/state';
+import { ArrayNode } from '../../type/state';
 import './drawableArrayNode.css';
 
 type DrawableArrayNodeProps = {

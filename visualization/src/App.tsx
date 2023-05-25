@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import DrawingBoard from './component/DrawingBoard';
-import { generateArrayState, generateIncreArrayState } from './component/state/arrayDsParser';
-import { State, VariableType } from './component/state/state';
+import { generateArrayState, generateIncreArrayState } from './component/type/arrayDsParser';
+import { State, VariableType } from './component/type/state';
 import "./App.css"
 
 const App: React.FC = () => {
@@ -92,6 +92,13 @@ const App: React.FC = () => {
   const prevState = history.length > 1 ? history[history.length - 2] : null;
   const nextState = currState;
 
+
+  // Graph: Adjacency list, (we use the index at adjaceny list as the node)
+  // Graph[0] will be a linked list, represent edge between node 0 and other node
+
+  // Visited array (type: state)
+  // array with same size, and each index the node
+  // 
   return (
     <div
       className="App"

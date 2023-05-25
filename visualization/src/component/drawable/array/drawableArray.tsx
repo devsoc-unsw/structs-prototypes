@@ -1,5 +1,5 @@
 import React from 'react';
-import { State, VariableType } from '../../state/state';
+import { State, VariableType } from '../../type/state';
 import DrawableArrayNode from './drawableArrayNode';
 import DrawableVariable from './drawableVaraible';
 import DrawableIntVariable from './textVariable';

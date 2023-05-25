@@ -1,7 +1,7 @@
 import React from 'react';
-import { SupportDataType } from './state/state';
+import { SupportDataType } from './type/state';
 import ArrayRenderer from './drawable/array/drawableArray';
-import { State } from './state/state';
+import { State } from './type/state';
 
 type DrawingBoardProps = {
   prevState: State | null;
