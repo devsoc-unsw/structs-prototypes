@@ -1,5 +1,6 @@
-import React from "react";
-import { LinkedListNodeComponent } from "./linkedList/drawable-node";
+import React from 'react';
+import { LinkedListNodeComponent } from './linkedList/drawable-node';
+import { Position } from './util';
 
 export enum SupportDataStructure {
   AdjacencyMatrix = 'adjacency-matrix',
@@ -16,27 +17,30 @@ export enum DrawableType {
 }
 
 export type DrawableBase = {
-  type: DrawableType,
+  type: DrawableType;
+  uid: string;
+};
+
+export interface DrawableLinkedListNode extends DrawableBase {
+  type: DrawableType.Node;
+  innerText: string;
+  position: Position;
 }
 
-export type DrawableElement = DrawableBase;
+export type DrawableElement = DrawableLinkedListNode;
 
-export abstract class DrawableComponent<T extends DrawableElement> extends React.Component {
-  abstract props: T;
-  abstract nextState(props: T): void;
-  abstract create(props: T): void;
-  abstract destroy(): void;
+export interface DrawableComponent {
+  ownRender(): JSX.Element;
+  nextState(props: DrawableElement): void;
+  create(props: DrawableElement): void;
+  destroy(): void;
 }
 
-export default function drawableFactory(): DrawableComponent<DrawableElement> {
-  return new LinkedListNodeComponent(
-    {
-      type: DrawableType.Node,
-      innerText: '',
-      position: {
-        x: 0,
-        y: 0,
-      }
-    }
-  );
+export default function drawableFactory(
+  element: DrawableElement,
+): DrawableComponent {
+  if (element.type === DrawableType.Node) {
+    return new LinkedListNodeComponent(element);
+  }
+  throw new Error('Invalid DrawableElement type');
 }

@@ -160,7 +160,7 @@ export function generateStateHistory(size: number = 5, numOperations: number = 3
 
   for (let i = 0; i < numOperations; i++) {
     // Decide which operation to apply
-    let operation = Math.floor(Math.random() * 3);
+    let operation = 0;
 
     switch (operation) {
       case 0:

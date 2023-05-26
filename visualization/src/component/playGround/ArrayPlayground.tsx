@@ -77,7 +77,6 @@ const PlayGround: React.FC = () => {
     if (history.length > 1) {
       const previousHistory = history.slice(0, -1);
       setHistory(clone(previousHistory));
-      debugger;
       console.log('Histroy state', previousHistory[previousHistory.length - 1])
       setEntityData(clone(previousHistory[previousHistory.length - 1]));
     }
