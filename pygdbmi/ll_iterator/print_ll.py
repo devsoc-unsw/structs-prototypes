@@ -67,11 +67,11 @@ while running:
                 var_next_data = f'{var_name}_next_data'
                 gdbmi.write(f'-var-create {var_next_data} * {data_val}->data')
                 response = gdbmi.write(f'-var-evaluate-expression {var_next_data}')
-                l1_next_data = response[0]['payload']['value']
-                print("value =", l1_next_data)
+                next_data = response[0]['payload']['value']
+                print("value =", next_data)
 
-                if 'next' in l1_next_data:
-                    var_name = l1_next_data
+                if 'next' in next_data:
+                    var_name = next_data
                     data_val = var_name
                 else:
                     break
