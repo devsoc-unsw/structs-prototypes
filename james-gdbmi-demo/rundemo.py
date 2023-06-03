@@ -118,11 +118,22 @@ def main():
 
                     size_res = gdbmi.write(f'-data-evaluate-expression --language c "sizeof ({var["name"]}[0])"')
                     # pprint(size_res)
+                    if "message" not in size_res[0]:
+                        continue
+                    else:
+                        if size_res[0]["message"] == "error":
+                            continue
                     size = int(size_res[0]["payload"]["value"])
                     var["elements"] = int(var["size"]/size)
                     print(var["elements"])
                 for i in range(var["elements"]):
                     temp = gdbmi.write(f'-data-evaluate-expression --language c "{var["name"]}[{i}]"')
+                    if "message" not in temp[0]:
+                        continue
+                    else:
+                        if temp[0]["message"] == "error":
+                            continue
+                    # pprint(temp)
                     print(temp[0]["payload"]["value"], end=", ")
             print("")
         r = gdbmi.write("-exec-continue")
