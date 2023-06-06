@@ -15,58 +15,58 @@
   <script>
 
     var baseNodes = [
-  { id: "0", label: "0" },
-  { id: "1", label: "1" },
-  { id: "2", label: "2" },
-  { id: "3", label: "3" },
-  { id: "4", label: "4" },
-  { id: "5", label: "5" },
-  { id: "6", label: "6" },
-  { id: "7", label: "7" },
-  { id: "8", label: "8" },
+  // { id: "0", label: "0" },
+  // { id: "1", label: "1" },
+  // { id: "2", label: "2" },
+  // { id: "3", label: "3" },
+  // { id: "4", label: "4" },
+  // { id: "5", label: "5" },
+  // { id: "6", label: "6" },
+  // { id: "7", label: "7" },
+  // { id: "8", label: "8" },
 ]
 
 var baseLinks = [
-    {
-        "source": "0",
-        "target": "1",
-        "strength": 0.1
-    },
-    {
-        "source": "1",
-        "target": "2",
-        "strength": 0.1
-    },
-    {
-        "source": "2",
-        "target": "3",
-        "strength": 0.1
-    },
-    {
-        "source": "3",
-        "target": "4",
-        "strength": 0.1
-    },
-    {
-        "source": "4",
-        "target": "5",
-        "strength": 0.1
-    },
-    {
-        "source": "5",
-        "target": "6",
-        "strength": 0.1
-    },
-    {
-        "source": "6",
-        "target": "7",
-        "strength": 0.1
-    },
-    {
-        "source": "7",
-        "target": "8",
-        "strength": 0.1
-    }
+    // {
+    //     "source": "0",
+    //     "target": "1",
+    //     "strength": 0.1
+    // },
+    // {
+    //     "source": "1",
+    //     "target": "2",
+    //     "strength": 0.1
+    // },
+    // {
+    //     "source": "2",
+    //     "target": "3",
+    //     "strength": 0.1
+    // },
+    // {
+    //     "source": "3",
+    //     "target": "4",
+    //     "strength": 0.1
+    // },
+    // {
+    //     "source": "4",
+    //     "target": "5",
+    //     "strength": 0.1
+    // },
+    // {
+    //     "source": "5",
+    //     "target": "6",
+    //     "strength": 0.1
+    // },
+    // {
+    //     "source": "6",
+    //     "target": "7",
+    //     "strength": 0.1
+    // },
+    // {
+    //     "source": "7",
+    //     "target": "8",
+    //     "strength": 0.1
+    // }
 ]
 
 for (const item of baseLinks) {item.strength = 2.1}
@@ -126,15 +126,15 @@ var linkForce = d3
 var simulation = d3
   .forceSimulation()
   .force('link', linkForce)
-  .force('charge', d3.forceManyBody().strength(-500))
-  .force('center', d3.forceCenter(width / 2, height / 2))
+  .force('charge', d3.forceManyBody().strength(-200))
+  // .force('center', d3.forceCenter(width / 2, height / 2))
 
   // moves everything towards centre -> helps prevent nodes from going out of canvas, but causes everything 
   // to be closer together
   // TODO: mebe find better way
-  .force('x', d3.forceX(width / 2).strength(0.01)) // Add force to keep nodes in horizontal bounds
-  .force('y', d3.forceY(height / 2).strength(0.01)) // Add force to keep nodes in vertical bounds
-  .force('collision', d3.forceCollide().radius(60)) // Add force to prevent node overlap
+  .force('x', d3.forceX(width / 2).strength(0.005)) // Add force to keep nodes in horizontal bounds
+  .force('y', d3.forceY(height / 2).strength(0.005)) // Add force to keep nodes in vertical bounds
+  // .force('collision', d3.forceCollide().radius(60)) // Add force to prevent node overlap
 
 var dragDrop = d3.drag().on('start', function (node) {
   node.fx = node.x
@@ -169,6 +169,8 @@ function updateGraph() {
     .attr('font-size', 20)
     .attr('dx', 0)
     .attr('dy', 5)
+    .attr('x', node => node.x)
+    .attr('y', node => node.y)
     .attr('fill', 'white')
     .style('pointer-events', 'none');
 
@@ -239,9 +241,12 @@ function updateGraph() {
   var nodeEnter = nodeElements
     .enter()
     .append('circle')
+    // .style('opacity', 0)
     .attr('r', 13)
     .attr('stroke', 'black') // Add a black border
     .attr('stroke-width', 2) // Set the border width to 2 pixels
+    .attr('cx', node => node.x)
+    .attr('cy', node => node.y)
     .call(dragDrop)
 
   nodeElements = nodeEnter.merge(nodeElements)
@@ -249,7 +254,13 @@ function updateGraph() {
     // Update node color based on level
     nodeElements
     .style('transition', 'fill 0.7s ease') // CSS transition for fill color
-    .style('fill', node => highlightedNodes.includes(node.id) ? '#cc1076' : '#AA96DA');
+    .style('fill', node => highlightedNodes.includes(node.id) ? '#cc1076' : '#AA96DA')
+    // .style('opacity', 1)
+    .style('transition', 'opacity 0.7s ease') // CSS transition for opacity
+    .transition()
+    .duration(700)
+    .style('opacity', 1) // Set opacity to 1
+    .style('radius', 1);
 }
 
 
@@ -291,50 +302,122 @@ updateSimulation()
 updateGraph()
 
 // Mock tests
+// setTimeout(function() {
+//   nodes.push({id: "0", label: "0", x: 200, y: width / 2})
+//   console.log(JSON.parse(JSON.stringify(nodes)))
+//   updateSimulation()
+//   console.log(JSON.parse(JSON.stringify(nodes)))
+//   nodes[0].x = 200
+//   nodes[0].y = width / 2
+//   updateSimulation()
+// }, 1000);
 
-// add lone node initialised with no next
+// setTimeout(function() {
+//   nodes.push({id: "1", label: "1", x: 50, y: width / 2})
+//   updateSimulation()
+//   nodes[1].x = nodes[0].x + 50
+//   nodes[1].y = width / 2
+//   updateSimulation()
+// }, 2000);
+
 setTimeout(function() {
-  nodes.push({id: "9", label: "9"})
+  nodes.push({id: "0", label: "0", x: 100, y: width / 2})
+  updateSimulation()
+}, 1000);
+
+setTimeout(function() {
+  nodes.push({id: "1", label: "1", x: nodes[0].x + 100, y: width / 2})
+  updateSimulation()
+}, 2000);
+
+
+
+
+// setTimeout(function() {
+//   nodes[0].x = 200
+//   updateSimulation()
+//   console.log(JSON.parse(JSON.stringify(nodes)))
+// }, 3000);
+
+
+setTimeout(function() {
+  links.push({source: "0", target: "1", strength: 0.1})
+  updateSimulation()
+}, 3000);
+
+// setTimeout(function() {
+//   nodes[0].x = 0;
+//   updateSimulation()
+// }, 4000);
+
+
+setTimeout(function() {
+  nodes.push({id: "2", label: "2", x: nodes[1].x + 100, y: width / 2})
+  updateSimulation()
+}, 4000);
+
+setTimeout(function() {
+  links.push({source: "1", target: "2", strength: 0.1})
+  updateSimulation()
+}, 5000);
+
+setTimeout(function() {
+  nodes.push({id: "3", label: "3", x: nodes[2].x + 100, y: width / 2})
   updateSimulation()
 }, 6000);
 
-// add node initialised with the head of the linked list
 setTimeout(function() {
-  nodes.push({id: "10", label: "10"})
-  links.push({source: "10", target: "0", strength: 0.1})
+  links.push({source: "2", target: "3", strength: 0.1})
   updateSimulation()
-}, 8000);
+}, 7000);
 
-// add node initialised with some node in middle of linked list
-setTimeout(function() {
-  nodes.push({id: "11", label: "11"})
-  links.push({source: "11", target: "4", strength: 0.1})
-  updateSimulation()
-}, 10000);
 
-// // change node value
+
+// // add lone node initialised with no next
 // setTimeout(function() {
-//   nodes[3].label = "42"
+//   nodes.push({id: "9", label: "9"})
+//   updateSimulation()
+// }, 6000);
+
+// // add node initialised with the head of the linked list
+// setTimeout(function() {
+//   nodes.push({id: "10", label: "10"})
+//   links.push({source: "10", target: "0", strength: 0.1})
+//   updateSimulation()
+// }, 8000);
+
+// // add node initialised with some node in middle of linked list
+// setTimeout(function() {
+//   nodes.push({id: "11", label: "11"})
+//   links.push({source: "11", target: "4", strength: 0.1})
+//   updateSimulation()
+// }, 10000);
+
+// // // change node value
+// // setTimeout(function() {
+// //   nodes[3].label = "42"
+// //   updateSimulation()
+// // }, 12000);
+
+// // change node next, was a lone node
+// setTimeout(function() {
+//   links.push({source: "9", target: "5", strength: 0.1})
 //   updateSimulation()
 // }, 12000);
 
-// change node next, was a lone node
-setTimeout(function() {
-  links.push({source: "9", target: "5", strength: 0.1})
-  updateSimulation()
-}, 12000);
-
-// change node next
-setTimeout(function() {
-  links[3].target = "10"
-  updateSimulation()
-}, 14000);
+// // change node next
+// setTimeout(function() {
+//   links[3].target = "10"
+//   updateSimulation()
+// }, 14000);
 
 // highlight node
-setTimeout(function() {
-  highlightedNodes.push("3")
-  updateSimulation()
-}, 16000);
+// setTimeout(function() {
+//   highlightedNodes.push("0")
+//   updateSimulation()
+// }, 2000);
+
+
   </script>
 </body>
 </html>
