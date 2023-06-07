@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 int func1() {
 	int insertion = 0;
@@ -17,7 +18,6 @@ int main() {
 	int b[4] = { 9, 6, 3, 2 };
 
 	int *foo = malloc(3 * sizeof(int));
-
 	func1();
 
 	foo[0] = 3;
