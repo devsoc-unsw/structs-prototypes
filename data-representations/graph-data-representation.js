@@ -3,7 +3,7 @@ let currGraphState = [
         nodeId: 'a',
         value: 1,
         edgesTo: [],
-        selected: true
+        highlighted: true
     },
 ]
 
@@ -12,13 +12,13 @@ let nextGraphState = [
         nodeId: 'a',
         value: 1,
         edgesTo: ['b'],
-        selected: false
+        highlighted: false
     },
     {
         nodeId: 'b',
         value: 2,
         edgesTo: [],
-        selected: true
+        highlighted: true
     },
 ]
 
