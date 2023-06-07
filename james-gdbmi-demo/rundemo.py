@@ -52,6 +52,10 @@ def main():
     # r = gdbmi.write("-break-list")
     # print(r)
     print("---")
+    r = gdbmi.write("-inferior-tty-set ./outfile.txt")
+    pprint(r)
+    print("---")
+
     running = True
     r = gdbmi.write("-exec-run")
     while running:
