@@ -1,0 +1,2 @@
+pygdbmi==0.11.0.0
+python-socketio==5.8.0
