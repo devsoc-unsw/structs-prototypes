@@ -11,7 +11,7 @@
 </head>
 <body style="background-color:#EAFFD0">  
     <div id="container" style="display: flex;">
-        <svg id="svg" style="width: 80%; height: 200%;"></svg>
+        <svg id="svg" style="width: 100%; height: 100%;"></svg>
         <div id="textContainer" style="width: 20%;"></div>
     </div>
       <script src="https://d3js.org/d3.v4.min.js"></script>
@@ -141,8 +141,8 @@ function updateGraph() {
     .text(function (node) { return node.label })
     .attr('font-size', 20)
     .attr('dx', 0)
-    .attr('dy', 5)
-    .attr('fill', 'white')
+    .attr('dy', 7)
+    .attr('fill', 'black')
     .style('pointer-events', 'none');
 
 
@@ -175,6 +175,12 @@ function updateGraph() {
   .style("font-family", "Helvetica")
 
   .attr('font-size', 20)
+  .attr("font-weight", 700)
+  // .attr("fill", "white")
+  // .style("-webkit-text-stroke", "2px white") // Set the outline width and color
+
+  .attr("stroke", "#EAFFD0")
+  .attr("stroke-width", 0.8)
   .text((link) => link.edgeWeight)
   .attr('debug, remove this', (link) => {
   })
@@ -258,31 +264,39 @@ function updateSimulation() {
     nodeElements
       .transition() // Apply transition
       .duration(50) // Set duration in milliseconds
-      .attr('cx', function (node) { return Math.min(node.x, width * 0.7)})
-      .attr('cy', function (node) { return Math.min(node.y, height * 0.75)});
+      .attr('cx', function (node) { return Math.min(node.x, width * 0.75)})
+      .attr('cy', function (node) { return Math.min(node.y, height * 0.8)});
       
     textElements
       .transition()
       .duration(50)
-      .attr('x', function (node) { return Math.min(node.x, width * 0.7) })
-      .attr('y', function (node) { return Math.min(node.y, height * 0.75) });
+      .attr('x', function (node) { return Math.min(node.x, width * 0.75) })
+      .attr('y', function (node) { return Math.min(node.y, height * 0.8) });
       
     linkElements
       .transition()
       .duration(50)
-      .attr('x1', function (link) { return Math.min(link.source.x, width * 0.7)})
-      .attr('y1', function (link) { return Math.min(link.source.y, height * 0.75) })
-      .attr('x2', function (link) { return Math.min(link.target.x, width * 0.7) })
-      .attr('y2', function (link) { return Math.min(link.target.y, height * 0.75) });
+      .attr('x1', function (link) { return Math.min(link.source.x, width * 0.75)})
+      .attr('y1', function (link) { return Math.min(link.source.y, height * 0.8) })
+      .attr('x2', function (link) { return Math.min(link.target.x, width * 0.75) })
+      .attr('y2', function (link) { return Math.min(link.target.y, height * 0.8) });
 
     weightElements
       .transition()
       .duration(50)
-      .attr('x', (link) => {
-        return (Number(link.source.x) + Number(link.target.x)) / 2 + 5;
+      .attr('x', (link) => {     
+        const { x: x1, y: y1 } = link.source;
+        const { x: x2, y: y2 } = link.target; 
+        // midpoint x-coordinate + 20 * normalised perpendicular vector x component
+        return (x1 + x2) / 2 + 20 * (y1 - y2) / (Math.sqrt((Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))));
+
       })
       .attr('y', (link) => {
-        return (Number(link.source.y) + Number(link.target.y)) / 2 + 5;
+        const { x: x1, y: y1 } = link.source;
+        const { x: x2, y: y2 } = link.target; 
+        // midpoint y-coordinate + 20 * normalised perpendicular vector y component
+        return (y1 + y2) / 2 + 20 * (x2 - x1) / (Math.sqrt((Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))));
+
       })
   });
 
