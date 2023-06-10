@@ -54,27 +54,14 @@ var baseLinks = [];
             baseLinks.push({
                 source: node.id,
                 target: neighbour,
-                strength: 0.1,
-                // weight: '1'
+                strength: 2.0,
+                id: Math.random(), // ideally id is {source, target} but having issues rn
+                // the id ^ is used to bind edge weight texts to links
+                edgeWeight: Math.floor(Math.random() * 10), // demo, really we need a separate adjlist structure where 
+                // neighbours is an array of objects with 'neighbourId' and 'edgeWeight'
             })
         })
     });
-
-// var baseLinks = [
-// 	{ target: "0", source: "1" , strength: 0.1 },
-// 	{ target: "0", source: "2" , strength: 0.1 },
-//   { target: "0", source: "3" , strength: 0.1 },
-//   { target: "0", source: "4" , strength: 0.1 },
-//   { target: "5", source: "6" , strength: 0.1 },
-//   { target: "5", source: "7" , strength: 0.1 },
-//   { target: "8"  , source: "9", strength: 0.1 },
-//   { target: "8"  , source: "10", strength: 0.1 },
-//   { target: "2"   , source: "4" , strength: 0.1 },
-//   { target: "9"  , source: "6" , strength: 0.1 },
-//   { target: "4"   , source: "7" , strength: 0.1 },
-//   { target: "1"   , source: "2" , strength: 0.1 },
-//   { target: "3"   , source: "6" , strength: 0.1 },
-// ]
 
 var nodes = [...baseNodes]
 var links = [...baseLinks]
@@ -95,6 +82,7 @@ var linkElements,
 var linkGroup = svg.append('g').attr('class', 'links')
 var nodeGroup = svg.append('g').attr('class', 'nodes')
 var textGroup = svg.append('g').attr('class', 'texts')
+var edgeWeightTextGroup = svg.append('g').attr('class', 'texts');
 
 // we use this reference to select/deselect
 // after clicking the same element twice
@@ -109,7 +97,7 @@ var linkForce = d3
 var simulation = d3
   .forceSimulation()
   .force('link', linkForce)
-  .force('charge', d3.forceManyBody().strength(-120))
+  .force('charge', d3.forceManyBody().strength(-500))
   .force('center', d3.forceCenter(width / 2, height / 2))
 
   // moves everything towards centre -> helps prevent nodes from going out of canvas, but causes everything 
@@ -149,6 +137,7 @@ function updateGraph() {
   var textEnter = textElements
     .enter()
     .append('text')
+    .style("font-family", "Helvetica")
     .text(function (node) { return node.label })
     .attr('font-size', 20)
     .attr('dx', 0)
@@ -167,6 +156,30 @@ function updateGraph() {
   textElements
     .attr('text-anchor', 'middle') // Center the text horizontally
     .attr('domin6-baseline', 'middle') // Center the text vertically
+
+
+  // edge weights
+  weightElements = edgeWeightTextGroup.selectAll('text')
+  .data(links, (link) => {
+    return link.id;
+  });
+
+  weightElements.exit()
+    .transition()
+    .duration(1000) // Duration of the transition effect in milliseconds
+    .style('opacity', 0) // Fade out the edge gradually
+    .remove()
+
+  newWeightElements = weightElements.enter()
+  .append('text')
+  .style("font-family", "Helvetica")
+
+  .attr('font-size', 20)
+  .text((link) => link.edgeWeight)
+  .attr('debug, remove this', (link) => {
+  })
+ 
+  weightElements = newWeightElements.merge(weightElements);
 
 
   // links
@@ -261,10 +274,20 @@ function updateSimulation() {
       .attr('y1', function (link) { return Math.min(link.source.y, height * 0.75) })
       .attr('x2', function (link) { return Math.min(link.target.x, width * 0.7) })
       .attr('y2', function (link) { return Math.min(link.target.y, height * 0.75) });
+
+    weightElements
+      .transition()
+      .duration(50)
+      .attr('x', (link) => {
+        return (Number(link.source.x) + Number(link.target.x)) / 2 + 5;
+      })
+      .attr('y', (link) => {
+        return (Number(link.source.y) + Number(link.target.y)) / 2 + 5;
+      })
   });
 
   simulation.force('link').links(links);
-  simulation.alphaTarget(0.2).restart();
+  simulation.alphaTarget(0.01).restart();
 }
 
 
@@ -291,8 +314,9 @@ function updateText() {
 // updates the array of edges to match the adjacency list
 const updateLinks = () => {
 
-  // traverse links in the adj list
-  // if link is not in the array of edges, add link to array of edges
+  // traverse links in the array of edges
+  // if link is not in the adj list, remove link from the array of edges 
+
   for (let i = links.length - 1; i >=0 ; i --) {
     const link = links[i]
       let list = adjList.find(item => item.id === link.source.id);
@@ -308,12 +332,14 @@ const updateLinks = () => {
       }
   }
 
-  // traverse links in the array of edges
-  // if link is not in the adj list, remove link from the array of edges 
+  // traverse links in the adj list
+  // if link is not in the array of edges, add link to array of edges
   for (const list of adjList) {
       for (const neighbour of list.neighbours) {          
           if (!links.find(link => link.source.id === list.id && link.target.id === neighbour)) {
-              links.push({target: neighbour, source: list.id, strength: 0.1 });
+              links.push({target: neighbour, source: list.id, strength: 0.5, id: Math.random(), edgeWeight: Math.floor(Math.random() * 10)});
+              // edgeweight is just set to list.id rn but really it should be set from the adjlist representation
+              // we need to modify the adjlist representation accordingly
           }
       }
   }
@@ -406,7 +432,7 @@ setTimeout(function() {
 
 
 <!-- issues & todo:
-    - Support weighted graphs
+    - Support weighted graphs                                       in process
     - look into other ways to make everything remain on screen
     - see if disjointed graphs work
     - changelog? describing changes to graph
@@ -415,7 +441,10 @@ setTimeout(function() {
     - think about expected gdp format and update nodes, 
       adj list and highlighted nodes interface accordingly
     - prevent nodes and edges from going too far up
-    - fix font issue - new nodes have different 
+    - make updateLinks() faster, probs can improve time complexity
+    - combine highlightednodes, adjlist vars, make 
+      nodes derived from adjlist
+    - fix font issue - new nodes have different                      done
       (default) font, font changes only after an edge 
       is added with that node
     - Animate adding new link gradually                              done
