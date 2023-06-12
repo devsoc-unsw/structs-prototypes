@@ -1,0 +1,24 @@
+define plist
+  set var $n = $arg0->head
+  while $n
+    printf "%d ", $n->data
+    set var $n = $n->next
+  end
+end
+
+
+define plist2
+  set var $n = $arg0->head
+  while $n
+    printf "Data: %d, Address: %p, Next: %p\n", $n->data, $n, $n->next
+    set var $n = $n->next
+  end
+
+
+
+define plist3
+  set $n = list->head
+  while $n
+    printf "Data: %d, Address: %p, Next: %p\n", $n->data, $n, $n->next
+    set $n = $n->next
+  end

@@ -1,0 +1,18 @@
+
+define plist
+  set var $n = list->head
+  set logging file linked_list_output.txt
+  set logging on
+  while $n
+    printf "Data: %d, Address: %p, Next: %p\n", $n->data, $n, $n->next
+    set var $n = $n->next
+  end
+  set logging off
+end
+
+file linked_list
+break 53
+run
+plist
+continue
+quit
