@@ -5,7 +5,7 @@ variable_name = input("Enter the variable name for the linked list: ")
 line_number = input("Enter the line number to set a breakpoint: ")
 
 # Specify the output file name
-output_file = "ll_output.txt"
+output_file = "ll_output_json.txt"
 
 # Construct the GDB script
 gdb_script = f"""
@@ -13,10 +13,15 @@ define plist
   set var $n = {variable_name}->head
   set logging file {output_file}
   set logging on
+  printf "["
   while $n
-    printf "Data: %d, Address: %p, Next: %p\\n", $n->data, $n, $n->next
+    printf "{{\\"Data\\": %d, \\"Address\\": \\"%p\\", \\"Next\\": \\"%p\\"}}", $n->data, $n, $n->next
     set var $n = $n->next
+    if $n
+      printf ","
+    end
   end
+  printf "]\\n"
   set logging off
 end
 

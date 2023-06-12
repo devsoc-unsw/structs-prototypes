@@ -1,7 +1,7 @@
 
 define plist
   set var $n = list->head
-  set logging file linked_list_output.txt
+  set logging file ll_output.txt
   set logging on
   while $n
     printf "Data: %d, Address: %p, Next: %p\n", $n->data, $n, $n->next
