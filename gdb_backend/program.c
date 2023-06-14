@@ -84,8 +84,6 @@ int main(int argc, char **argv) {
 	remove_val_d(dlist, 23);
 	remove_val_d(dlist, 12);
 	remove_val_d(dlist, 12);
-
-
 }
 
 void func1(int *arr, int len, int modify) {
@@ -164,7 +162,8 @@ void remove_val(struct node * list, int val) {
 			free(curr->next);
 			curr->next = temp;
 			break;
-		}	
+		}
+		curr = curr->next;
 	}
 }
 
@@ -196,13 +195,16 @@ listd_t *new_listd(double val) {
 
 void appendd(listd_t *list, double val) {
 	noded_t *elem = new_noded(val);
+	elem->prev = list->tail;
 	list->tail->next = elem;
 	list->tail = elem;
+	list->size++;
 }
 
 void remove_backd(listd_t *list) {
 	noded_t *temp = list->tail;
 	list->tail = list->tail->prev;
+	list->tail->next = NULL;
 	free(temp);
 }
 
@@ -215,6 +217,7 @@ void remove_val_d(listd_t *list, double val) {
 			free(curr);
 			break;
 		}
+		curr = curr->next;
 	}
 }
 
