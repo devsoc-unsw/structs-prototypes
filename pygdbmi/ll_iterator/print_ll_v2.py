@@ -57,11 +57,13 @@ while running:
     pprint(dereferenced_vars)
 
     for var in dereferenced_vars:
-        if 'next' in var['dereferenced']:
+        print('DEREFERENCING VARS')
+        
+        if 'head' in var['dereferenced']:
             var_name = var["name"]
             print(f'VARIABLE: {var_name}')
 
-            data_val = var_name
+            data_val = var_name + '->head'
 
             while True:
                 var_next_data = f'{var_name}_next_data'

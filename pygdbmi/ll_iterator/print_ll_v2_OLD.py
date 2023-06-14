@@ -57,7 +57,8 @@ while running:
     pprint(dereferenced_vars)
 
     for var in dereferenced_vars:
-        if 'next' in var['dereferenced']:
+        
+        if 'head' in var['dereferenced']:
             var_name = var["name"]
             print(f'VARIABLE: {var_name}')
 
@@ -65,12 +66,12 @@ while running:
 
             while True:
                 var_next_data = f'{var_name}_next_data'
-                gdbmi.write(f'-var-create {var_next_data} * {data_val}->data')
+                gdbmi.write(f'-var-create {var_next_data} * {data_val}->head->next->next->data')
                 response = gdbmi.write(f'-var-evaluate-expression {var_next_data}')
                 next_data = response[0]['payload']['value']
                 print("value =", next_data)
 
-                if 'next' in next_data:
+                if 'head' in next_data:
                     data_val = next_data
                 else:
                     break
