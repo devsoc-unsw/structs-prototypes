@@ -11,6 +11,10 @@ struct node {
 	struct node *next;
 };
 
+struct list_2 {
+    struct node *head;
+};
+
 typedef struct noded noded_t;
 struct noded {
 	double data;
@@ -40,6 +44,33 @@ void appendd(listd_t *list, double val);
 void remove_backd(listd_t *list);
 void remove_val_d(listd_t *list, double val);
 void remove_headd(listd_t *list);
+
+
+void appendList(int value, struct list_2 *list) {
+    struct node *new_tail = new_node(value);
+    if (list->head == NULL) {
+        list->head = new_tail;
+        return;
+    }
+
+    struct node *curr = list->head;
+    while (curr->next != NULL) {
+        curr = curr->next;
+    }
+
+    curr->next = new_tail;
+};
+
+
+void print_list(struct list_2 *list) {
+    struct node *curr = list->head;
+    while (curr != NULL) {
+        printf("%d -> ", curr->data);
+        curr = curr->next;
+    }
+    printf("X\n");
+}
+
 
 
 int main(int argc, char **argv) {
@@ -84,6 +115,15 @@ int main(int argc, char **argv) {
 	remove_val_d(dlist, 23);
 	remove_val_d(dlist, 12);
 	remove_val_d(dlist, 12);
+
+    struct list_2 *list2 = malloc(sizeof(struct list_2));
+    list2->head = NULL;
+    appendList(5, list2);
+    appendList(10, list2);
+    appendList(21, list2);
+    appendList(234, list2);
+    appendList(67, list2);
+    print_list(list2);
 }
 
 void func1(int *arr, int len, int modify) {
