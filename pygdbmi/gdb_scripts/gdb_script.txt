@@ -1,12 +1,17 @@
 
 define plist
   set var $n = list->head
-  set logging file ll_output.txt
+  set logging file ll_output_json.txt
   set logging on
+  printf "["
   while $n
-    printf "Data: %d, Address: %p, Next: %p\n", $n->data, $n, $n->next
+    printf "{\"Data\": %d, \"Address\": \"%p\", \"Next\": \"%p\"}", $n->data, $n, $n->next
     set var $n = $n->next
+    if $n
+      printf ","
+    end
   end
+  printf "]\n"
   set logging off
 end
 
