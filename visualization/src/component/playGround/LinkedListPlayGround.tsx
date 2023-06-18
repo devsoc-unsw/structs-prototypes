@@ -5,62 +5,22 @@ import { generateStateHistory } from './stateGenerator/linkedListGenerator';
 import { parseLinkedListState } from '../stateParser/parser';
 import drawableFactory, { DrawableComponent, DrawableElement } from '../drawable/drawable';
 import { element } from 'prop-types';
+import ReactJson from 'react-json-view'
 
 const PlayGround: React.FC = () => {
-  const [currState, setCurrState] = useState<LinkedListDataState | null>(null);
-  const [history, setHistory] = useState<LinkedListDataState[]>([]);
-
-  let [data, setData] = useState<LinkedListDataState[]>([]);
+  let [liveHistory, setData] = useState<LinkedListDataState[]>([]);
   let [idx, setIdx] = useState<number>(0);
   const onResetLinkedList = () => {
-    setCurrState(null);
-    setHistory([]);
-    setDrawables(new Map());
-
     setData(generateStateHistory(5, 5));
     setIdx(0);
-    console.log(data);
   };
 
-  const onParse = () => {
-    debugger;
-    console.log(parseLinkedListState(data[idx]));
-  }
-
-  const [drawables, setDrawables] = useState<Map<string, DrawableComponent>>(new Map());
-  const onRender = () => {
-    let drawableNodes = parseLinkedListState(data[idx]);
-    if (drawableNodes === null) {
-      return;
-    }
-  
-    // Create a copy of drawables
-    let updatedDrawables = new Map(drawables);
-    console.log(updatedDrawables, drawableNodes);
-  
-    for (let node of drawableNodes) {
-      if (updatedDrawables.has(node.uid)) {
-        let currDrawable = updatedDrawables.get(node.uid);
-        if (currDrawable === undefined) {
-          continue;
-        }
-        currDrawable.nextState(node);
-      } else {
-        let element = drawableFactory(node);
-        updatedDrawables.set(node.uid, element);
-        element.create(node);
-      }
-    }
-  
-    // Update the state using setDrawables
-    setDrawables(updatedDrawables);
-    console.log(drawables);
-    setIdx((idx) => idx++);
-  }
-
-  // Clone function here
-  const clone = (a: any) => {
-    return JSON.parse(JSON.stringify(a));
+  let getHistroyJson = () => {
+    return liveHistory.map((historyState) => {
+      let dup = JSON.parse(JSON.stringify(historyState)) as any;
+      dup.dataStructure.data = Array.from(historyState.dataStructure.data);
+      return dup;
+    })
   }
 
   return (
@@ -79,14 +39,12 @@ const PlayGround: React.FC = () => {
         LinkedList Playground
       </h1>
       <button onClick={onResetLinkedList}>Start</button>
-      <button onClick={onParse}>Parse</button>
-      <button onClick={onRender}>Render</button>
-      {/* Render the DrawableComponents */}
-      <svg style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
-        {Array.from(drawables.values()).map((component, index) => (
-          <React.Fragment key={index}>{component.ownRender()}</React.Fragment>
-        ))}
-      </svg>
+
+      {/* JSON viewer */}
+      <div>
+        <h2>State History:</h2>
+        <ReactJson src={getHistroyJson()} theme="monokai" />
+      </div>
     </div>
   );
 };
