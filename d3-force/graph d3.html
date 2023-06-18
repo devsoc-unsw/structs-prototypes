@@ -5,445 +5,586 @@
 
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Force-Directed Graph</title>
-</head>
-<body style="background-color:#EAFFD0">  
-    <div id="container" style="display: flex;">
-        <svg id="svg" style="width: 100%; height: 100%;"></svg>
-        <div id="textContainer" style="width: 20%;"></div>
+  <head>
+    <meta charset="utf-8" />
+    <title>Force-Directed Graph</title>
+  </head>
+  <body style="background-color: #eaffd0">
+    <div id="container" style="display: flex">
+      <svg id="svg" style="width: 100%; height: 100%"></svg>
+      <div id="textContainer" style="width: 20%"></div>
+      <button onclick="goBack()">Back</button>
+      <button onclick="goForward()">Forward</button>
     </div>
-      <script src="https://d3js.org/d3.v4.min.js"></script>
-  <script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script>
+      var baseNodes = [
+        { id: "0", label: "0" },
+        { id: "1", label: "1" },
+        { id: "2", label: "2" },
+        { id: "3", label: "3" },
+        { id: "4", label: "4" },
+        { id: "5", label: "5" },
+        { id: "6", label: "6" },
+        { id: "7", label: "7" },
+        { id: "8", label: "8" },
+        { id: "9", label: "9" },
+        { id: "10", label: "10" },
+      ];
 
-    var baseNodes = [
-  { id: "0", label: "0" },
-  { id: "1", label: "1" },
-  { id: "2", label: "2" },
-  { id: "3", label: "3" },
-  { id: "4", label: "4" },
-  { id: "5", label: "5" },
-  { id: "6", label: "6" },
-  { id: "7", label: "7" },
-  { id: "8", label: "8" },
-  { id: "9", label: "9" },
-  { id: "10", label: "10" }
-]
+      let adjList = [
+        { id: "0", neighbours: ["1", "2", "3", "4"] },
+        { id: "1", neighbours: ["0", "2"] },
+        { id: "2", neighbours: ["4"] },
+        { id: "3", neighbours: ["6"] },
+        { id: "4", neighbours: ["7"] },
+        { id: "5", neighbours: ["6", "7"] },
+        { id: "6", neighbours: [] },
+        { id: "7", neighbours: [] },
+        { id: "8", neighbours: ["9", "10"] },
+        { id: "9", neighbours: ["6"] },
+        { id: "10", neighbours: [] },
+      ];
 
-let adjList = [
-    {id: "0", neighbours: ["1", "2", "3", "4"]},
-    {id: "1", neighbours: ["0", "2"]},
-    {id: "2", neighbours: ["4"]},
-    {id: "3", neighbours: ["6"]},
-    {id: "4", neighbours: ["7"]},
-    {id: "5", neighbours: ["6", "7"]},
-    {id: "6", neighbours: []},
-    {id: "7", neighbours: []},
-    {id: "8", neighbours: ["9", "10"]},
-    {id: "9", neighbours: ["6"]},
-    {id: "10", neighbours: []},
-]
+      var baseLinks = [];
+      adjList.forEach((node) => {
+        node.neighbours.forEach((neighbour) => {
+          baseLinks.push({
+            source: node.id,
+            target: neighbour,
+            strength: 2.0,
+            id: Math.random(), // ideally id is {source, target} but having issues rn
+            // the id ^ is used to bind edge weight texts to links
+            edgeWeight: Math.floor(Math.random() * 10) * 10, // demo, really we need a separate adjlist structure where
+            // neighbours is an array of objects with 'neighbourId' and 'edgeWeight'
+          });
+        });
+      });
 
-isDirectedGraph = true;
+      var nodes = [...baseNodes];
+      var links = [...baseLinks];
 
+      var highlightedNodes = [];
 
-var baseLinks = [];
-    adjList.forEach(node => {
-        node.neighbours.forEach(neighbour => {
-            baseLinks.push({
-                source: node.id,
-                target: neighbour,
-                strength: 2.0,
-                id: Math.random(), // ideally id is {source, target} but having issues rn
-                // the id ^ is used to bind edge weight texts to links
-                edgeWeight: Math.floor(Math.random() * 10), // demo, really we need a separate adjlist structure where 
-                // neighbours is an array of objects with 'neighbourId' and 'edgeWeight'
-            })
+      let states = [];
+      states.push({
+        adjList: JSON.parse(JSON.stringify(adjList)),
+        nodes: JSON.parse(JSON.stringify(nodes)),
+        highlightedNodes: JSON.parse(JSON.stringify(highlightedNodes)),
+      });
+      console.log(states);
+      let currStateIndex = 0;
+
+      isDirectedGraph = true;
+
+      var width = window.innerWidth;
+      var height = window.innerHeight;
+
+      var svg = d3.select("svg");
+      svg.attr("width", width).attr("height", height);
+
+      var linkElements, nodeElements, textElements;
+
+      // we use svg groups to logically group the elements together
+      var linkGroup = svg.append("g").attr("class", "links");
+      var nodeGroup = svg.append("g").attr("class", "nodes");
+      var textGroup = svg.append("g").attr("class", "texts");
+      var edgeWeightTextGroup = svg.append("g").attr("class", "texts");
+
+      // we use this reference to select/deselect
+      // after clicking the same element twice
+      var selectedId;
+
+      // simulation setup with all forces
+      var linkForce = d3
+        .forceLink()
+        .id(function (link) {
+          return link.id;
         })
-    });
+        .strength(function (link) {
+          return link.strength;
+        });
 
-var nodes = [...baseNodes]
-var links = [...baseLinks]
+      var simulation = d3
+        .forceSimulation()
+        .force("link", linkForce)
+        .force("charge", d3.forceManyBody().strength(-500))
+        .force("center", d3.forceCenter(width / 2, height / 2))
 
-var highlightedNodes = []
+        // moves everything towards centre -> helps prevent nodes from going out of canvas, but causes everything
+        // to be closer together
+        // TODO: mebe find better way
+        .force("x", d3.forceX(width / 2).strength(0.005)) // Add force to keep nodes in horizontal bounds
+        .force("y", d3.forceY(height / 2).strength(0.005)) // Add force to keep nodes in vertical bounds
+        .force("collision", d3.forceCollide().radius(42)); // Add force to prevent node overlap
 
-var width = window.innerWidth
-var height = window.innerHeight
+      var dragDrop = d3
+        .drag()
+        .on("start", function (node) {
+          node.fx = node.x;
+          node.fy = node.y;
+        })
+        .on("drag", function (node) {
+          simulation.alphaTarget(0.2).restart();
+          node.fx = d3.event.x;
+          node.fy = d3.event.y;
+        })
+        .on("end", function (node) {
+          if (!d3.event.active) {
+            simulation.alphaTarget(0);
+          }
+          node.fx = null;
+          node.fy = null;
+        });
 
-var svg = d3.select('svg')
-svg.attr('width', width).attr('height', height)
+      function updateGraph() {
+        // texts
+        textElements = textGroup
+          .selectAll("text")
+          .data(nodes, function (node) {
+            return node.id;
+          })
+          .style("font-family", "Helvetica");
 
-var linkElements,
-  nodeElements,
-  textElements
+        textElements
+          .exit()
+          .transition()
+          .duration(700) // Duration of the transition effect in milliseconds
+          .style("opacity", 0) // Fade out the edge gradually
+          .remove();
+        var textEnter = textElements
+          .enter()
+          .append("text")
+          .style("font-family", "Helvetica")
+          .text(function (node) {
+            return node.label;
+          })
+          .attr("font-size", 20)
+          .attr("dx", 0)
+          .attr("dy", 7)
+          .attr("fill", "black")
+          .style("pointer-events", "none");
 
-// we use svg groups to logically group the elements together
-var linkGroup = svg.append('g').attr('class', 'links')
-var nodeGroup = svg.append('g').attr('class', 'nodes')
-var textGroup = svg.append('g').attr('class', 'texts')
-var edgeWeightTextGroup = svg.append('g').attr('class', 'texts');
+        textElements = textEnter.merge(textElements);
 
-// we use this reference to select/deselect
-// after clicking the same element twice
-var selectedId
+        // Update text content based on node labels
+        textElements.text(function (node) {
+          return node.label;
+        });
 
-// simulation setup with all forces
-var linkForce = d3
-  .forceLink()
-  .id(function (link) { return link.id })
-  .strength(function (link) { return link.strength })
+        // Additional styling for text inside the circles
+        textElements
+          .attr("text-anchor", "middle") // Center the text horizontally
+          .attr("domin6-baseline", "middle"); // Center the text vertically
 
-var simulation = d3
-  .forceSimulation()
-  .force('link', linkForce)
-  .force('charge', d3.forceManyBody().strength(-500))
-  .force('center', d3.forceCenter(width / 2, height / 2))
+        // edge weights
+        weightElements = edgeWeightTextGroup
+          .selectAll("text")
+          .data(links, (link) => {
+            return link.id;
+          });
 
-  // moves everything towards centre -> helps prevent nodes from going out of canvas, but causes everything 
-  // to be closer together
-  // TODO: mebe find better way
-  .force('x', d3.forceX(width / 2).strength(0.005)) // Add force to keep nodes in horizontal bounds
-  .force('y', d3.forceY(height / 2).strength(0.005)) // Add force to keep nodes in vertical bounds
-  .force('collision', d3.forceCollide().radius(42)); // Add force to prevent node overlap
+        weightElements
+          .exit()
+          .transition()
+          .duration(1000) // Duration of the transition effect in milliseconds
+          .style("opacity", 0) // Fade out the edge gradually
+          .remove();
 
+        newWeightElements = weightElements
+          .enter()
+          .append("text")
+          .style("font-family", "Helvetica")
 
-var dragDrop = d3.drag().on('start', function (node) {
-  node.fx = node.x
-  node.fy = node.y
-}).on('drag', function (node) {
-  simulation.alphaTarget(0.2).restart()
-  node.fx = d3.event.x
-  node.fy = d3.event.y
-}).on('end', function (node) {
-  if (!d3.event.active) {
-    simulation.alphaTarget(0)
-  }
-  node.fx = null
-  node.fy = null
-})
+          .attr("font-size", 15)
+          .attr("font-weight", 700)
+          .attr("text-anchor", "middle")
+          // .attr("fill", "white")
+          // .style("-webkit-text-stroke", "2px white") // Set the outline width and color
 
-function updateGraph() {
-  // texts
-  textElements = textGroup.selectAll('text')
-    .data(nodes, function (node) { return node.id })
-    .style("font-family", "Helvetica")
+          .attr("stroke", "#EAFFD0")
+          .attr("stroke-width", 0.8)
+          .text((link) => link.edgeWeight)
+          .attr("debug, remove this", (link) => {});
 
-    textElements.exit()
-    .transition()
-    .duration(700) // Duration of the transition effect in milliseconds
-    .style('opacity', 0) // Fade out the edge gradually
-    .remove()
-  var textEnter = textElements
-    .enter()
-    .append('text')
-    .style("font-family", "Helvetica")
-    .text(function (node) { return node.label })
-    .attr('font-size', 20)
-    .attr('dx', 0)
-    .attr('dy', 7)
-    .attr('fill', 'black')
-    .style('pointer-events', 'none');
+        weightElements = newWeightElements.merge(weightElements);
 
+        // links
+        linkElements = linkGroup.selectAll("line").data(links, function (link) {
+          return link.target.id + link.source.id;
+        });
 
-  textElements = textEnter.merge(textElements)
+        linkElements
+          .exit()
+          .transition()
+          .duration(700) // Duration of the transition effect in milliseconds
+          .style("opacity", 0) // Fade out the edge gradually
+          .remove();
 
-  // Update text content based on node labels
-  textElements
-    .text(function (node) { return node.label })
+        svg
+          .append("defs")
+          .append("marker")
+          .attr("id", "arrowhead")
+          .attr("viewBox", "-0 -5 10 10")
+          .attr("refX", 16)
+          .attr("refY", 0)
+          .attr("orient", "auto")
+          .attr("markerWidth", 3) // adjust this value as needed
+          .attr("markerHeight", 3) // adjust this value as needed
+          .append("svg:path")
+          .attr("d", "M 0,-5 L 10 ,0 L 0,5")
+          .attr("fill", "black")
+          .style("stroke", "none");
 
-    // Additional styling for text inside the circles
-  textElements
-    .attr('text-anchor', 'middle') // Center the text horizontally
-    .attr('domin6-baseline', 'middle') // Center the text vertically
+        var linkEnter = linkElements
+          .enter()
+          .append("line")
+          .attr("stroke-width", 5)
+          .attr("stroke", "black")
+          .attr("marker-end", isDirectedGraph ? "url(#arrowhead)" : null)
+          .attr("x1", function (link) {
+            return link.source.x;
+          })
+          .attr("y1", function (link) {
+            return link.source.y;
+          })
+          .attr("x2", function (link) {
+            return link.target.x;
+          })
+          .attr("y2", function (link) {
+            return link.target.y;
+          });
 
+        linkElements = linkEnter.merge(linkElements);
 
-  // edge weights
-  weightElements = edgeWeightTextGroup.selectAll('text')
-  .data(links, (link) => {
-    return link.id;
-  });
+        // nodes
+        nodeElements = nodeGroup
+          .selectAll("circle")
+          .data(nodes, function (node) {
+            return node.id;
+          });
 
-  weightElements.exit()
-    .transition()
-    .duration(1000) // Duration of the transition effect in milliseconds
-    .style('opacity', 0) // Fade out the edge gradually
-    .remove()
+        nodeElements
+          .exit()
+          .transition()
+          .duration(700) // Duration of the transition effect in milliseconds
+          .style("opacity", 0) // Fade out the edge gradually
+          .remove();
+        var nodeEnter = nodeElements
+          .enter()
+          .append("circle")
+          .attr("r", 13)
+          .attr("stroke", "black") // Add a black border
+          .attr("stroke-width", 2) // Set the border width to 2 pixels
+          .call(dragDrop);
 
-  newWeightElements = weightElements.enter()
-  .append('text')
-  .style("font-family", "Helvetica")
+        nodeElements = nodeEnter.merge(nodeElements);
 
-  .attr('font-size', 20)
-  .attr("font-weight", 700)
-  // .attr("fill", "white")
-  // .style("-webkit-text-stroke", "2px white") // Set the outline width and color
-
-  .attr("stroke", "#EAFFD0")
-  .attr("stroke-width", 0.8)
-  .text((link) => link.edgeWeight)
-  .attr('debug, remove this', (link) => {
-  })
- 
-  weightElements = newWeightElements.merge(weightElements);
-
-
-  // links
-  linkElements = linkGroup.selectAll('line')
-    .data(links, function (link) {
-      return link.target.id + link.source.id
-    })
-
-    linkElements.exit()
-    .transition()
-    .duration(700) // Duration of the transition effect in milliseconds
-    .style('opacity', 0) // Fade out the edge gradually
-    .remove()
-
-
-    svg.append('defs').append('marker')
-  .attr('id', 'arrowhead')
-  .attr('viewBox', '-0 -5 10 10')
-  .attr('refX', 16)
-  .attr('refY', 0)
-  .attr('orient', 'auto')
-  .attr('markerWidth', 3) // adjust this value as needed
-  .attr('markerHeight', 3) // adjust this value as needed
-  .append('svg:path')
-  .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-  .attr('fill', 'black')
-  .style('stroke', 'none');
-
-
-  var linkEnter = linkElements
-    .enter().append('line')
-    .attr('stroke-width', 5)
-  .attr('stroke', 'black')
-  .attr('marker-end', isDirectedGraph ? 'url(#arrowhead)' : null)
-  .attr('x1', function (link) { return link.source.x })
-  .attr('y1', function (link) { return link.source.y })
-  .attr('x2', function (link) { return link.target.x })
-  .attr('y2', function (link) { return link.target.y })
-
-  linkElements = linkEnter.merge(linkElements)
-
-
-  
-
-  // nodes
-  nodeElements = nodeGroup.selectAll('circle')
-    .data(nodes, function (node) { return node.id })
-
-    nodeElements.exit()
-    .transition()
-    .duration(700) // Duration of the transition effect in milliseconds
-    .style('opacity', 0) // Fade out the edge gradually
-    .remove()
-  var nodeEnter = nodeElements
-    .enter()
-    .append('circle')
-    .attr('r', 13)
-    .attr('stroke', 'black') // Add a black border
-    .attr('stroke-width', 2) // Set the border width to 2 pixels
-    .call(dragDrop)
-
-  nodeElements = nodeEnter.merge(nodeElements)
-
-    // Update node color based on level
-    nodeElements
-    .style('transition', 'fill 0.7s ease') // CSS transition for fill color
-    .style('fill', node => highlightedNodes.includes(node.id) ? '#cc1076' : '#AA96DA');
-}
-
-
-
-function updateSimulation() {
-  updateGraph();
-
-  simulation.nodes(nodes).on('tick', () => {
-    nodeElements
-      .transition() // Apply transition
-      .duration(50) // Set duration in milliseconds
-      .attr('cx', function (node) { return Math.min(node.x, width * 0.75)})
-      .attr('cy', function (node) { return Math.min(node.y, height * 0.8)});
-      
-    textElements
-      .transition()
-      .duration(50)
-      .attr('x', function (node) { return Math.min(node.x, width * 0.75) })
-      .attr('y', function (node) { return Math.min(node.y, height * 0.8) });
-      
-    linkElements
-      .transition()
-      .duration(50)
-      .attr('x1', function (link) { return Math.min(link.source.x, width * 0.75)})
-      .attr('y1', function (link) { return Math.min(link.source.y, height * 0.8) })
-      .attr('x2', function (link) { return Math.min(link.target.x, width * 0.75) })
-      .attr('y2', function (link) { return Math.min(link.target.y, height * 0.8) });
-
-    weightElements
-      .transition()
-      .duration(50)
-      .attr('x', (link) => {     
-        const { x: x1, y: y1 } = link.source;
-        const { x: x2, y: y2 } = link.target; 
-        // midpoint x-coordinate + 20 * normalised perpendicular vector x component
-        return (x1 + x2) / 2 + 20 * (y1 - y2) / (Math.sqrt((Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))));
-
-      })
-      .attr('y', (link) => {
-        const { x: x1, y: y1 } = link.source;
-        const { x: x2, y: y2 } = link.target; 
-        // midpoint y-coordinate + 20 * normalised perpendicular vector y component
-        return (y1 + y2) / 2 + 20 * (x2 - x1) / (Math.sqrt((Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))));
-
-      })
-  });
-
-  simulation.force('link').links(links);
-  simulation.alphaTarget(0.01).restart();
-}
-
-
-// last but not least, we call updateSimulation
-// to trigger the initial render
-updateSimulation()
-
-var textContainer = d3.select("#textContainer");
-
-function updateText() {
-  let adjListString = '<strong style="font-weight: bold; font-family: \'Open Sans\', sans-serif;">Adjacency list representation:</strong><br>';
-  adjList.forEach(node => {
-    adjListString += '<span style="font-weight: bold; color: #a503c0; font-family: \'Open Sans\', sans-serif;">' + node['id'] + ':</span> ';
-    node.neighbours.forEach((neighbour, index) => {
-      adjListString += '<span style="color: #a503c0; font-family: \'Open Sans\', sans-serif;">' + neighbour + '</span>';
-      adjListString += index < node.neighbours.length - 1 ? ' <span style="color: #a503c0; font-family: \'Open Sans\', sans-serif;">⇨</span> ' : '';
-    });
-    adjListString += '<br>';
-  });
-  textContainer.html(adjListString);
-}
-
-
-// updates the array of edges to match the adjacency list
-const updateLinks = () => {
-
-  // traverse links in the array of edges
-  // if link is not in the adj list, remove link from the array of edges 
-
-  for (let i = links.length - 1; i >=0 ; i --) {
-    const link = links[i]
-      let list = adjList.find(item => item.id === link.source.id);
-      if (!list) {
-        const index = links.findIndex(item => item.source.id === link.source.id && item.target.id === link.target.id);
-        links.splice(index, 1)
+        // Update node color based on level
+        nodeElements
+          .style("transition", "fill 0.7s ease") // CSS transition for fill color
+          .style("fill", (node) =>
+            highlightedNodes.includes(node.id) ? "#cc1076" : "#AA96DA"
+          );
       }
-      else if (!list.neighbours.includes(link.target.id)) {
-          const index = links.findIndex(item => item.source.id === link.source.id && item.target.id === link.target.id);
-          if (index !== -1) {
+
+      const updateStatesAndSimulation = () => {
+        states.push({
+          adjList: JSON.parse(JSON.stringify(adjList)),
+          nodes: JSON.parse(JSON.stringify(nodes)),
+          highlightedNodes: JSON.parse(JSON.stringify(highlightedNodes)),
+        });
+        console.log(states);
+        updateSimulation();
+        ++currStateIndex;
+      };
+
+      function updateSimulation() {
+        updateGraph();
+
+        simulation.nodes(nodes).on("tick", () => {
+          nodeElements
+            .transition() // Apply transition
+            .duration(50) // Set duration in milliseconds
+            .attr("cx", function (node) {
+              return Math.min(node.x, width * 0.75);
+            })
+            .attr("cy", function (node) {
+              return Math.min(node.y, height * 0.75);
+            });
+
+          textElements
+            .transition()
+            .duration(50)
+            .attr("x", function (node) {
+              return Math.min(node.x, width * 0.75);
+            })
+            .attr("y", function (node) {
+              return Math.min(node.y, height * 0.75);
+            });
+
+          linkElements
+            .transition()
+            .duration(50)
+            .attr("x1", function (link) {
+              return Math.min(link.source.x, width * 0.75);
+            })
+            .attr("y1", function (link) {
+              return Math.min(link.source.y, height * 0.75);
+            })
+            .attr("x2", function (link) {
+              return Math.min(link.target.x, width * 0.75);
+            })
+            .attr("y2", function (link) {
+              return Math.min(link.target.y, height * 0.75);
+            });
+
+          weightElements
+            .transition()
+            .duration(50)
+            .attr("x", (link) => {
+              const { x: x1, y: y1 } = link.source;
+              const { x: x2, y: y2 } = link.target;
+              // midpoint x-coordinate + 20 * normalised perpendicular vector x component
+              return (
+                (x1 + x2) / 2 -
+                0 +
+                (13 * (y1 - y2)) /
+                  Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+              );
+            })
+            .attr("y", (link) => {
+              const { x: x1, y: y1 } = link.source;
+              const { x: x2, y: y2 } = link.target;
+              // midpoint y-coordinate + 20 * normalised perpendicular vector y component
+              return (
+                (y1 + y2) / 2 +
+                5 +
+                (13 * (x2 - x1)) /
+                  Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+              );
+            });
+        });
+
+        simulation.force("link").links(links);
+        simulation.alphaTarget(0.01).restart();
+      }
+
+      // last but not least, we call updateSimulation
+      // to trigger the initial render
+      updateSimulation();
+
+      var textContainer = d3.select("#textContainer");
+
+      function updateText() {
+        let adjListString =
+          "<strong style=\"font-weight: bold; font-family: 'Open Sans', sans-serif;\">Adjacency list representation:</strong><br>";
+        adjList.forEach((node) => {
+          adjListString +=
+            "<span style=\"font-weight: bold; color: #a503c0; font-family: 'Open Sans', sans-serif;\">" +
+            node["id"] +
+            ":</span> ";
+          node.neighbours.forEach((neighbour, index) => {
+            adjListString +=
+              "<span style=\"color: #a503c0; font-family: 'Open Sans', sans-serif;\">" +
+              neighbour +
+              "</span>";
+            adjListString +=
+              index < node.neighbours.length - 1
+                ? " <span style=\"color: #a503c0; font-family: 'Open Sans', sans-serif;\">⇨</span> "
+                : "";
+          });
+          adjListString += "<br>";
+        });
+        textContainer.html(adjListString);
+      }
+
+      // updates the array of edges to match the adjacency list
+      const updateLinks = () => {
+        // traverse links in the array of edges
+        // if link is not in the adj list, remove link from the array of edges
+
+        for (let i = links.length - 1; i >= 0; i--) {
+          const link = links[i];
+          let list = adjList.find((item) => item.id === link.source.id);
+          if (!list) {
+            const index = links.findIndex(
+              (item) =>
+                item.source.id === link.source.id &&
+                item.target.id === link.target.id
+            );
             links.splice(index, 1);
-          }      
-      }
-  }
+          } else if (!list.neighbours.includes(link.target.id)) {
+            const index = links.findIndex(
+              (item) =>
+                item.source.id === link.source.id &&
+                item.target.id === link.target.id
+            );
+            if (index !== -1) {
+              links.splice(index, 1);
+            }
+          }
+        }
 
-  // traverse links in the adj list
-  // if link is not in the array of edges, add link to array of edges
-  for (const list of adjList) {
-      for (const neighbour of list.neighbours) {          
-          if (!links.find(link => link.source.id === list.id && link.target.id === neighbour)) {
-              links.push({target: neighbour, source: list.id, strength: 0.5, id: Math.random(), edgeWeight: Math.floor(Math.random() * 10)});
+        // traverse links in the adj list
+        // if link is not in the array of edges, add link to array of edges
+        for (const list of adjList) {
+          for (const neighbour of list.neighbours) {
+            if (
+              !links.find(
+                (link) =>
+                  link.source.id === list.id && link.target.id === neighbour
+              )
+            ) {
+              links.push({
+                target: neighbour,
+                source: list.id,
+                strength: 0.5,
+                id: Math.random(),
+                edgeWeight: Math.floor(Math.random() * 10),
+              });
               // edgeweight is just set to list.id rn but really it should be set from the adjlist representation
               // we need to modify the adjlist representation accordingly
+            }
           }
-      }
-  }
-}
+        }
+      };
 
+      const updateNodes = (newNodes) => {
+        // traverse nodes
+        // if node is not in newNodes, remove it from nodes
+        for (const node of nodes) {
+          const index = newNodes.findIndex((newNode) => newNode.id === node.id);
 
-updateText();
-updateGraph()
+          if (index === -1) {
+            nodes.splice(index, 1);
+          }
+        }
 
-// Mock tests
+        // traverse newnodes
+        // if newnode is not in nodes, add it to nodes
+        for (const newNode of newNodes) {
+          if (!nodes.find((node) => node.id === newNode.id)) {
+            nodes.push({ id: newNode.id, label: newNode.label });
+          }
+        }
+      };
 
-  setTimeout(function() {
-    adjList[5].neighbours.push("10")
-    updateLinks();
-    updateText()
-    updateSimulation()
-}, 3000);
+      updateText();
+      updateGraph();
 
-setTimeout(function() {
-    nodes.push({id: "11", label: "11"})
-    adjList.push({id: "11", neighbours: []})
-    updateText()
-    updateSimulation()
-}, 5000);
+      // Mock tests
 
-setTimeout(function() {
-    adjList[7].neighbours.push("11");
-    updateLinks()
-    updateText();
-    updateSimulation();
-}, 7000);
+      setTimeout(function () {
+        adjList[5].neighbours.push("10");
+        updateLinks();
+        updateText();
+        updateStatesAndSimulation();
+      }, 3000);
 
-setTimeout(function() {
-    highlightedNodes.push('0')
-    updateSimulation()
-}, 9000);
+      setTimeout(function () {
+        nodes.push({ id: "11", label: "11" });
+        adjList.push({ id: "11", neighbours: [] });
+        updateText();
+        updateStatesAndSimulation();
+      }, 5000);
 
-setTimeout(function() {
-    highlightedNodes.push('1')
-    updateSimulation()
-}, 10000);
+      setTimeout(function () {
+        adjList[7].neighbours.push("11");
+        updateLinks();
+        updateText();
+        updateStatesAndSimulation();
+      }, 7000);
 
-setTimeout(function() {
-    highlightedNodes.push('2')
-    updateSimulation()
-}, 11000);
+      setTimeout(function () {
+        highlightedNodes.push("0");
+        updateStatesAndSimulation();
+      }, 9000);
 
-setTimeout(function() {
-    highlightedNodes.push('4')
-    updateSimulation()
-}, 12000);
+      // setTimeout(function() {
+      //     highlightedNodes.push('1')
+      //     updateStatesAndSimulation()
+      // }, 10000);
 
-setTimeout(function() {
-    highlightedNodes.push('7')
-    updateSimulation()
-}, 13000);
+      // setTimeout(function() {
+      //     highlightedNodes.push('2')
+      //     updateStatesAndSimulation()
+      // }, 11000);
 
-setTimeout(function() {
-    highlightedNodes.push('11')
-    updateSimulation()
-}, 14000);
+      // setTimeout(function() {
+      //     highlightedNodes.push('4')
+      //     updateStatesAndSimulation()
+      // }, 12000);
 
-setTimeout(function() {
-    highlightedNodes.push('3')
-    updateSimulation()
-}, 15000);
+      // setTimeout(function() {
+      //     highlightedNodes.push('7')
+      //     updateStatesAndSimulation()
+      // }, 13000);
 
-setTimeout(function() {
-    highlightedNodes.push('6')
-    updateSimulation()
-}, 16000);
+      // setTimeout(function() {
+      //     highlightedNodes.push('11')
+      //     updateStatesAndSimulation()
+      // }, 14000);
 
-setTimeout(function() {
-    highlightedNodes = []
-    updateSimulation()
-}, 18000);
+      // setTimeout(function() {
+      //     highlightedNodes.push('3')
+      //     updateStatesAndSimulation()
+      // }, 15000);
 
-setTimeout(function() {
-    adjList.splice(adjList.findIndex(item => item.id === '5'), 1);
-    nodes.splice(nodes.findIndex(item => item.id === '5'), 1);
-    updateLinks();
-    updateText()
-    updateSimulation()
-}, 20000);
+      // setTimeout(function() {
+      //     highlightedNodes.push('6')
+      //     updateStatesAndSimulation()
+      // }, 16000);
 
+      // setTimeout(function() {
+      //     highlightedNodes = []
+      //     updateStatesAndSimulation()
+      // }, 18000);
 
-  </script>
-</body>
+      setTimeout(function () {
+        adjList.splice(
+          adjList.findIndex((item) => item.id === "5"),
+          1
+        );
+        nodes.splice(
+          nodes.findIndex((item) => item.id === "5"),
+          1
+        );
+        updateLinks();
+        updateText();
+        updateStatesAndSimulation();
+      }, 11000);
+
+      const goBack = () => {
+        if (--currStateIndex < 0) {
+          ++currStateIndex;
+          return;
+        }
+        console.log(currStateIndex);
+
+        highlightedNodes = states[currStateIndex].highlightedNodes;
+        adjList = states[currStateIndex].adjList;
+        updateLinks();
+        updateNodes(states[currStateIndex].nodes);
+        updateSimulation();
+      };
+
+      const goForward = () => {
+        if (++currStateIndex >= states.length) {
+          --currStateIndex;
+          return;
+        }
+        console.log(currStateIndex);
+        highlightedNodes = states[currStateIndex].highlightedNodes;
+        adjList = states[currStateIndex].adjList;
+        updateLinks();
+        updateNodes(states[currStateIndex].nodes);
+        updateSimulation();
+      };
+    </script>
+    ss
+  </body>
 </html>
-
 
 <!-- issues & todo:
     - Support weighted graphs                                       in process

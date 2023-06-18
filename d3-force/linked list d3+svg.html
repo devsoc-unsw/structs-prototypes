@@ -5,312 +5,500 @@
 
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Force-Directed Graph</title>
-</head>
-<body style="background-color:#EAFFD0">
-    <svg id="svg" style="width: 100%; height: 200%;"></svg>
-      <script src="https://d3js.org/d3.v4.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
+  <head>
+    <meta charset="utf-8" />
+    <title>Force-Directed Graph</title>
+  </head>
+  <body style="background-color: #eaffd0">
+    <svg id="svg" style="width: 100%; height: 200%"></svg>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
 
-  <script>
+    <script>
+      var baseNodes = [];
+      var baseLinks = [];
 
-    var baseNodes = []
-    var baseLinks = []
+      for (const item of baseLinks) {
+        item.strength = 2.1;
+      }
 
-    for (const item of baseLinks) {item.strength = 2.1}
+      setTimeout(function () {
+        for (const item of baseLinks) {
+          item.strength = 0.1;
+        }
+        updateSimulation();
+      }, 100);
 
-    setTimeout(function() {
-      for (const item of baseLinks) {item.strength = 0.1}
-      updateSimulation()
-    }, 100);
+      var nodes = [...baseNodes];
+      var links = [...baseLinks];
 
-var nodes = [...baseNodes]
-var links = [...baseLinks]
+      var highlightedNodes = [];
 
-var highlightedNodes = []
+      var width = window.innerWidth;
+      var height = window.innerHeight;
 
-var width = window.innerWidth
-var height = window.innerHeight
+      var svg = d3.select("svg");
+      svg.attr("width", width).attr("height", height);
 
-var svg = d3.select('svg')
-svg.attr('width', width).attr('height', height)
+      var linkElements, nodeElements, textElements;
 
-var linkElements,
-  nodeElements,
-  textElements
+      // we use svg groups to logically group the elements together
+      var linkGroup = svg.append("g").attr("class", "links");
+      var nodeGroup = svg.append("g").attr("class", "nodes");
+      var textGroup = svg.append("g").attr("class", "texts");
 
-// we use svg groups to logically group the elements together
-var linkGroup = svg.append('g').attr('class', 'links')
-var nodeGroup = svg.append('g').attr('class', 'nodes')
-var textGroup = svg.append('g').attr('class', 'texts')
+      // we use this reference to select/deselect
+      // after clicking the same element twice
+      var selectedId;
 
-// we use this reference to select/deselect
-// after clicking the same element twice
-var selectedId
+      // simulation setup with all forces
+      var linkForce = d3
+        .forceLink()
+        .id(function (link) {
+          return link.id;
+        })
+        .strength(function (link) {
+          return link.strength;
+        });
 
-// simulation setup with all forces
-var linkForce = d3
-  .forceLink()
-  .id(function (link) { return link.id })
-  .strength(function (link) { return link.strength })
+      var simulation = d3
+        .forceSimulation()
+        .force("link", linkForce)
+        .force("charge", d3.forceManyBody().strength(-200))
+        // .force('center', d3.forceCenter(width / 2, height / 2))
 
-var simulation = d3
-  .forceSimulation()
-  .force('link', linkForce)
-  .force('charge', d3.forceManyBody().strength(-200))
-  // .force('center', d3.forceCenter(width / 2, height / 2))
+        // moves everything towards centre -> helps prevent nodes from going out of canvas, but causes everything
+        // to be closer together
+        // TODO: mebe find better way
+        .force("x", d3.forceX(width / 2).strength(0.005)) // Add force to keep nodes in horizontal bounds
+        .force("y", d3.forceY(height / 2).strength(0.005)) // Add force to keep nodes in vertical bounds
+        .force("collision", d3.forceCollide().radius(42)); // Add force to prevent node overlap
 
-  // moves everything towards centre -> helps prevent nodes from going out of canvas, but causes everything 
-  // to be closer together
-  // TODO: mebe find better way
-  .force('x', d3.forceX(width / 2).strength(0.005)) // Add force to keep nodes in horizontal bounds
-  .force('y', d3.forceY(height / 2).strength(0.005)) // Add force to keep nodes in vertical bounds
-  // .force('collision', d3.forceCollide().radius(60)) // Add force to prevent node overlap
+      var dragDrop = d3
+        .drag()
+        .on("start", function (node) {
+          node.fx = node.x;
+          node.fy = node.y;
+        })
+        .on("drag", function (node) {
+          simulation.alphaTarget(0.2).restart();
+          node.fx = d3.event.x;
+          node.fy = d3.event.y;
+        })
+        .on("end", function (node) {
+          if (!d3.event.active) {
+            simulation.alphaTarget(0);
+          }
+          node.fx = null;
+          node.fy = null;
+        });
 
-var dragDrop = d3.drag().on('start', function (node) {
-  node.fx = node.x
-  node.fy = node.y
-}).on('drag', function (node) {
-  simulation.alphaTarget(0.2).restart()
-  node.fx = d3.event.x
-  node.fy = d3.event.y
-}).on('end', function (node) {
-  if (!d3.event.active) {
-    simulation.alphaTarget(0)
-  }
-  node.fx = null
-  node.fy = null
-})
+      function updateGraph() {
+        // texts
+        textElements = textGroup
+          .selectAll("text")
+          .data(nodes, function (node) {
+            return node.id;
+          })
+          .style("font-family", "Helvetica");
 
-function updateGraph() {
-  // texts
-  textElements = textGroup.selectAll('text')
-    .data(nodes, function (node) { return node.id })
-    .style("font-family", "Helvetica")
+        textElements
+          .exit()
+          .transition()
+          .duration(700) // Duration of the transition effect in milliseconds
+          .style("opacity", 0) // Fade out the edge gradually
+          .remove();
+        var textEnter = textElements
+          .enter()
+          .append("text")
+          .text(function (node) {
+            return node.label;
+          })
+          .attr("id", (node) => "text" + node.id)
+          .attr("opacity", 0)
+          .attr("font-size", 20)
+          .attr("dx", 0)
+          .attr("dy", 5)
+          .attr("x", (node) => node.x)
+          .attr("y", (node) => node.y)
+          .attr("fill", "black")
+          .style("pointer-events", "none")
+          .style("font-family", "Helvetica");
 
-    textElements.exit()
-    .transition()
-    .duration(700) // Duration of the transition effect in milliseconds
-    .style('opacity', 0) // Fade out the edge gradually
-    .remove()
-  var textEnter = textElements
-    .enter()
-    .append('text')
-    .text(function (node) { return node.label })
-    .attr('id', node => 'text' + node.id)
-    .attr('font-size', 20)
-    .attr('dx', 0)
-    .attr('dy', 5)
-    .attr('x', node => node.x)
-    .attr('y', node => node.y)
-    .attr('fill', 'white')
-    .style('pointer-events', 'none')
-    .style("font-family", "Helvetica");
+        textElements = textEnter.merge(textElements);
 
+        // Update text content based on node labels
+        textElements.text(function (node) {
+          return node.label;
+        });
 
+        // Additional styling for text inside the circles
+        textElements
+          .attr("text-anchor", "middle") // Center the text horizontally
+          .attr("domin6-baseline", "middle"); // Center the text vertically
 
-  textElements = textEnter.merge(textElements)
+        // links
+        linkElements = linkGroup.selectAll("line").data(links, function (link) {
+          return link.target.id + link.source.id;
+        });
 
-  // Update text content based on node labels
-  textElements
-    .text(function (node) { return node.label })
+        linkElements
+          .exit()
+          .transition()
+          .duration(700) // Duration of the transition effect in milliseconds
+          .style("opacity", 0) // Fade out the edge gradually
+          .remove();
 
-    // Additional styling for text inside the circles
-  textElements
-    .attr('text-anchor', 'middle') // Center the text horizontally
-    .attr('domin6-baseline', 'middle') // Center the text vertically
+        svg
+          .append("defs")
+          .append("marker")
+          .attr("id", "arrowhead")
+          .attr("viewBox", "-0 -5 10 10")
+          .attr("refX", 16)
+          .attr("refY", 0)
+          .attr("orient", "auto")
+          .attr("markerWidth", 3) // adjust this value as needed
+          .attr("markerHeight", 3) // adjust this value as needed
+          .append("svg:path")
+          .attr("d", "M 0,-5 L 10 ,0 L 0,5")
+          .attr("fill", "black")
+          .style("stroke", "none");
 
+        var linkEnter = linkElements
+          .enter()
+          .append("line")
+          .attr("stroke-width", 5)
+          .attr("stroke", "black")
+          .attr("marker-end", "url(#arrowhead)")
+          .attr("x1", function (link) {
+            return link.source.x;
+          })
+          .attr("y1", function (link) {
+            return link.source.y;
+          })
+          .attr("x2", function (link) {
+            return link.target.x;
+          })
+          .attr("y2", function (link) {
+            return link.target.y;
+          });
 
-  // links
-  linkElements = linkGroup.selectAll('line')
-    .data(links, function (link) {
-      return link.target.id + link.source.id
-    })
+        linkElements = linkEnter.merge(linkElements);
 
-    linkElements.exit()
-    .transition()
-    .duration(700) // Duration of the transition effect in milliseconds
-    .style('opacity', 0) // Fade out the edge gradually
-    .remove()
+        // nodes (circles)
+        nodeElements = nodeGroup
+          .selectAll("circle")
+          .data(nodes, function (node) {
+            return node.id;
+          });
 
+        nodeElements
+          .exit()
+          .transition()
+          .duration(700) // Duration of the transition effect in milliseconds
+          .style("opacity", 0) // Fade out the edge gradually
+          .remove();
+        var nodeEnter = nodeElements
+          .enter()
+          .append("circle")
+          .attr("opacity", 0)
+          .attr("r", 13)
+          .attr("id", (node) => "circle" + node.id)
+          .attr("stroke", "black") // Add a black border
+          .attr("stroke-width", 2) // Set the border width to 2 pixels
+          .attr("cx", (node) => node.x)
+          .attr("cy", (node) => node.y)
+          .attr("fill", (node) =>
+            highlightedNodes.includes(node.id) ? "#cc1076" : "#AA96DA"
+          )
+          .call(dragDrop);
 
-    svg.append('defs').append('marker')
-  .attr('id', 'arrowhead')
-  .attr('viewBox', '-0 -5 10 10')
-  .attr('refX', 16)
-  .attr('refY', 0)
-  .attr('orient', 'auto')
-  .attr('markerWidth', 3) // adjust this value as needed
-  .attr('markerHeight', 3) // adjust this value as needed
-  .append('svg:path')
-  .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-  .attr('fill', 'black')
-  .style('stroke', 'none');
+        nodeElements = nodeEnter.merge(nodeElements);
+      }
 
+      function updateSimulation() {
+        updateGraph();
 
-  var linkEnter = linkElements
-    .enter().append('line')
-    .attr('stroke-width', 5)
-  .attr('stroke', 'black')
-  .attr('marker-end','url(#arrowhead)')
-  .attr('x1', function (link) { return link.source.x })
-  .attr('y1', function (link) { return link.source.y })
-  .attr('x2', function (link) { return link.target.x })
-  .attr('y2', function (link) { return link.target.y })
+        simulation.nodes(nodes).on("tick", () => {
+          nodeElements
+            .transition() // Apply transition
+            .duration(50) // Set duration in milliseconds
+            .attr("cx", function (node) {
+              return Math.min(node.x, width);
+            })
+            .attr("cy", function (node) {
+              return Math.min(node.y, height * 0.9);
+            });
 
-  linkElements = linkEnter.merge(linkElements)
+          textElements
+            .transition()
+            .duration(50)
+            .attr("x", function (node) {
+              return Math.min(node.x, width);
+            })
+            .attr("y", function (node) {
+              return Math.min(node.y, height * 0.9);
+            });
 
+          linkElements
+            .transition()
+            .duration(50)
+            .attr("x1", function (link) {
+              return Math.min(link.source.x, width);
+            })
+            .attr("y1", function (link) {
+              return Math.min(link.source.y, height * 0.9);
+            })
+            .attr("x2", function (link) {
+              return Math.min(link.target.x, width);
+            })
+            .attr("y2", function (link) {
+              return Math.min(link.target.y, height * 0.9);
+            });
+        });
 
-  
+        simulation.force("link").links(links);
+        simulation.alphaTarget(0.1).restart();
+      }
 
-  // nodes (circles)
-  nodeElements = nodeGroup.selectAll('circle')
-    .data(nodes, function (node) { return node.id })
+      // takes in node id text and returns the svg circle for that node
+      const getSVGCircleOfNode = (nodeId) =>
+        SVG(d3.select(`circle[id="circle${nodeId}"]`).node());
 
-    nodeElements.exit()
-    .transition()
-    .duration(700) // Duration of the transition effect in milliseconds
-    .style('opacity', 0) // Fade out the edge gradually
-    .remove()
-  var nodeEnter = nodeElements
-    .enter()
-    .append('circle')
-    .attr('opacity', 0)
-    .attr('r', 13)
-    .attr('id', node => 'circle' + node.id)
-    .attr('stroke', 'black') // Add a black border
-    .attr('stroke-width', 2) // Set the border width to 2 pixels
-    .attr('cx', node => node.x)
-    .attr('cy', node => node.y)
-    .attr('fill', node => highlightedNodes.includes(node.id) ? '#cc1076' : '#AA96DA')
-    .call(dragDrop);
+      // takes in node id text and returns the svg text for that node
+      const getSVGTextOfNode = (nodeId) =>
+        SVG(d3.select(`text[id="text${nodeId}"]`).node());
 
-  nodeElements = nodeEnter.merge(nodeElements)
+      // last but not least, we call updateSimulation
+      // to trigger the initial render
+      updateSimulation();
 
-}
+      updateGraph();
 
+      // changes should look like:
+      // {
+      //   modified: [{ id, data, next }];
+      //   deleted: [id];
+      // }
 
-function updateSimulation() {
-  updateGraph();
+      const simulateNextState = (changes) => {
+        changes.modified.forEach((modifiedNodeBackend) => {
+          modifiedNode = nodes.find(
+            (node) => node.id === modifiedNodeBackend.id
+          );
+          // if the node is not new
+          if (modifiedNode) {
+            modifiedNode.label = modifiedNodeBackend.data; // update label
+            modifiedLink = links.findIndex(
+              (link) => link.source.id === modifiedNode.id
+            );
+            // if old next was not null
+            if (modifiedLink !== -1) {
+              // if new next is not null, update link
+              if (modifiedNodeBackend.next != "null") {
+                links[modifiedLink].target = modifiedNodeBackend.next;
+                // if old next was not null and new next is null, delete link
+              } else {
+                links.splice(modifiedLink, 1);
+              }
+            }
+            // if old next was null and new next is not null, add new link
+            else if (modifiedNodeBackend.next != "null") {
+              links.push({
+                source: modifiedNode.id,
+                target: modifiedNodeBackend.next,
+                strength: 0.3,
+              });
+            }
+          }
+          // if the node is new, we create a new node and we create a new link if next is not null
+          else {
+            nodes.push({
+              id: modifiedNodeBackend.id,
+              label: modifiedNodeBackend.data,
+              x:
+                modifiedNodeBackend.next !== "null"
+                  ? nodes.find((node) => node.id === modifiedNodeBackend.next)
+                      .x - 100
+                  : nodes.length !== 0
+                  ? nodes[nodes.length - 1].x + 100
+                  : 100,
+              y: width / 4,
+            });
 
-  simulation.nodes(nodes).on('tick', () => {
-    nodeElements
-      .transition() // Apply transition
-      .duration(50) // Set duration in milliseconds
-      .attr('cx', function (node) { return Math.min(node.x, width)})
-      .attr('cy', function (node) { return Math.min(node.y, height * 0.9)});
-      
-    textElements
-      .transition()
-      .duration(50)
-      .attr('x', function (node) { return Math.min(node.x, width) })
-      .attr('y', function (node) { return Math.min(node.y, height * 0.9) });
-      
-    linkElements
-      .transition()
-      .duration(50)
-      .attr('x1', function (link) { return Math.min(link.source.x, width)})
-      .attr('y1', function (link) { return Math.min(link.source.y, height * 0.9) })
-      .attr('x2', function (link) { return Math.min(link.target.x, width) })
-      .attr('y2', function (link) { return Math.min(link.target.y, height * 0.9) });
-  });
+            updateSimulation();
+            getSVGCircleOfNode(modifiedNodeBackend.id)
+              .animate(1500)
+              .attr({ opacity: 1 });
 
-  simulation.force('link').links(links);
-  simulation.alphaTarget(0.4).restart();
-}
+            getSVGTextOfNode(modifiedNodeBackend.id)
+              .animate(1500)
+              .attr({ opacity: 1 });
 
-// takes in node id text and returns the svg circle for that node
-const getSVGCircleOfNode = (nodeId) => SVG(d3.select(`circle[id="circle${nodeId}"]`).node());
+            if (modifiedNodeBackend.next != "null") {
+              links.push({
+                source: modifiedNodeBackend.id,
+                target: modifiedNodeBackend.next,
+                strength: 0.1,
+              });
+            }
+          }
+        });
 
-// takes in node id text and returns the svg text for that node
-const getSVGTextOfNode = (nodeId) => SVG(d3.select(`text[id="text${nodeId}"]`).node());
+        // loop through deleted nodes, removing them from nodes array and links array
+        changes.deleted.forEach((deletedNodeBackend) => {
+          deletedNode = nodes.findIndex(
+            (node) => node.id === deletedNodeBackend
+          );
+          if (deletedNode !== -1) {
+            nodes.splice(deletedNode, 1);
+            deletedLink = links.findIndex(
+              (link) => link.source.id === deletedNodeBackend
+            );
+            if (deletedLink !== -1) {
+              links.splice(deletedLink, 1);
+            }
+          }
+        });
 
-// last but not least, we call updateSimulation
-// to trigger the initial render
-updateSimulation()
+        updateSimulation();
+      };
 
-updateGraph()
+      document.body.appendChild(svg.node());
+      var draw = SVG().addTo("svg").size(3000, 3000);
 
-document.body.appendChild(svg.node());
-var draw = SVG().addTo('svg').size(3000, 3000)
+      // add a node with no next
+      setTimeout(function () {
+        simulateNextState({
+          modified: [{ id: "0x1000", data: "0", next: "null" }],
+          deleted: [],
+        });
+      }, 1000);
 
+      // add a node with no next
+      setTimeout(function () {
+        simulateNextState({
+          modified: [{ id: "0x2000", data: "13", next: "null" }],
+          deleted: [],
+        });
+      }, 2000);
 
-setTimeout(function() {
-  nodes.push({id: "0", label: "0", x: 100, y: width / 2})
-  updateSimulation()
-  node0 = getSVGCircleOfNode('0')
-  node0.animate(1500).attr({'opacity': 1});
-}, 1000);
+      // change a node's next from null i.e. create an edge
+      setTimeout(function () {
+        simulateNextState({
+          modified: [{ id: "0x1000", data: "0", next: "0x2000" }],
+          deleted: [],
+        });
+      }, 3000);
 
-setTimeout(function() {
-  nodes.push({id: "1", label: "1", x: nodes[0].x + 100, y: width / 2})
-  updateSimulation()
-  node1 = getSVGCircleOfNode('1')
-  node1.animate(1000).attr({'opacity': 1});
-}, 2000);
+      // add a node with a next i.e. create a node and edge
+      setTimeout(function () {
+        simulateNextState({
+          modified: [{ id: "0x3000", data: "5", next: "0x2000" }],
+          deleted: [],
+        });
+      }, 4000);
 
-setTimeout(function() {
-  links.push({source: "0", target: "1", strength: 0.1})
-  updateSimulation()
-}, 3000);
+      // change a node's next to null i.e. remove an edge
+      setTimeout(function () {
+        simulateNextState({
+          modified: [{ id: "0x3000", data: "5", next: "null" }],
+          deleted: [],
+        });
+      }, 5000);
 
+      // change a node's next from some node to another node i.e. modify an existing edge
+      setTimeout(function () {
+        simulateNextState({
+          modified: [{ id: "0x1000", data: "5", next: "0x3000" }],
+          deleted: [],
+        });
+      }, 6000);
 
+      // add a node with no next
+      setTimeout(function () {
+        simulateNextState({
+          modified: [{ id: "0x4000", data: "6", next: "null" }],
+          deleted: [],
+        });
+      }, 7000);
 
-setTimeout(function() {
-  nodes.push({id: "2", label: "2", x: nodes[1].x + 100, y: width / 2})
-  updateSimulation()
-  node2 = getSVGCircleOfNode('2')
-  node2.animate(1000).attr({'opacity': 1});
+      // delete a node with no next
+      setTimeout(function () {
+        simulateNextState({
+          modified: [],
+          deleted: ["0x4000"],
+        });
+      }, 8000);
 
-}, 4000);
+      // delete a node with a next
+      setTimeout(function () {
+        simulateNextState({
+          modified: [],
+          deleted: ["0x1000"],
+        });
+      }, 9000);
 
-setTimeout(function() {
-  links.push({source: "1", target: "2", strength: 0.1})
-  updateSimulation()
-}, 5000);
+      // change a node's data
+      setTimeout(function () {
+        simulateNextState({
+          modified: [{ id: "0x3000", data: "93", next: "null" }],
+          deleted: [],
+        });
+      }, 10000);
 
-setTimeout(function() {
-  nodes.push({id: "3", label: "3", x: nodes[2].x + 100, y: width / 2})
-  updateSimulation()
-  node3 = getSVGCircleOfNode('3')
-  node3.animate(1000).attr({'opacity': 1});
+      // more testing below
+      setTimeout(function () {
+        simulateNextState({
+          modified: [{ id: "0x1000", data: "1", next: "null" }],
+          deleted: [],
+        });
+      }, 11000);
 
-}, 6000);
+      setTimeout(function () {
+        simulateNextState({
+          modified: [{ id: "0x2000", data: "2", next: "0x1000" }],
+          deleted: [],
+        });
+      }, 12000);
 
-setTimeout(function() {
-  links.push({source: "2", target: "3", strength: 0.1})
-  updateSimulation()
-}, 7000);
+      setTimeout(function () {
+        simulateNextState({
+          modified: [{ id: "0x3000", data: "3", next: "null" }],
+          deleted: [],
+        });
+      }, 13000);
 
-setTimeout(function() {
-  links.pop()
-  updateSimulation()
-}, 9000);
+      // case when deleting a node that another node points to
+      // rn the arrowhead position remains fixed to where the deleted node was
+      // but the next can be changed to another node or null after and that will work properly
+      setTimeout(function () {
+        simulateNextState({
+          modified: [],
+          deleted: ["0x1000"],
+        });
+      }, 14000);
 
-setTimeout(function() {
-  links[1].target = "3"
-  updateSimulation()
-}, 11000);
+      setTimeout(function () {
+        simulateNextState({
+          modified: [{ id: "0x2000", data: "2", next: "0x3000" }],
+          deleted: [],
+        });
+      }, 16000);
 
-// setTimeout(function() {
-//   links[1].target = "3"
-//   updateSimulation()
-// }, 11000);
-
-  </script>
-</body>
+      setTimeout(function () {
+        simulateNextState({
+          modified: [{ id: "0x5000", data: "5", next: "0x2000" }],
+          deleted: [],
+        });
+      }, 17000);
+    </script>
+  </body>
 </html>
-
 
 <!-- issues & todo:
 
     - make changing a node's value animate gradually
-    - arrange linked list in a straight line
-    - create a data structure representing expected gdb output, and write code to determine how to change array of edges and nodes array accordingly
-
-
     - look into other ways to make everything remain on screen
     - refactor code to ts, clean up, add more comments
     - look into using svg.js for the node objects
