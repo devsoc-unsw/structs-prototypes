@@ -249,6 +249,7 @@ void remove_backd(listd_t *list) {
 	list->size--;
 }
 
+// This function has 1 bug, it does not update the size of the lsit
 void remove_val_d(listd_t *list, double val) {
 	noded_t *curr = list->head;
 	while (curr->next != NULL) {
@@ -256,18 +257,22 @@ void remove_val_d(listd_t *list, double val) {
 			curr->prev->next = curr->next;
 			curr->next->prev = curr->prev;
 			free(curr);
-			list->size--;
 			break;
 		}
 		curr = curr->next;
 	}
 }
 
+/* 
+  This funciton has 2 bugs.
+
+  1. It does not update the size of the list
+  2. It does not set the prev of the new head to NULL
+
+*/ 
 void remove_headd(listd_t *list) {
 	noded_t *temp = list->head;
 	list->head = list->head->next;
-	list->head->prev = NULL;
-	list->size--;
 	free(temp);
 }
 
