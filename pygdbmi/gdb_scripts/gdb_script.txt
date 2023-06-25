@@ -1,6 +1,6 @@
 
 define plist
-  set var $n = list->head
+  set var $n = list2->head
   set logging file ll_output_json.txt
   set logging on
   printf "["
@@ -15,8 +15,8 @@ define plist
   set logging off
 end
 
-file linked_list
-break 53
+file program
+break 126
 run
 plist
 continue
