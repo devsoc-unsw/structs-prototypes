@@ -50,19 +50,24 @@ const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
     const showClick = () => {
       return config.showClick && showAddButton;
     }
+
+    const dragProps: Partial<{ drag: boolean | "x" | "y"; dragConstraints: { left: number; right: number; top: number; bottom: number } }> = config.canDrag ? {
+      drag: true,
+      dragConstraints: {
+        left: 0,
+        top: 0,
+        right: 1000, // change to your desired area width
+        bottom: 1000, // change to your desired area height
+      },
+    } : {}
+  
     return (
       <motion.g
         ref={ref}
         initial={{ x: position.x, y: position.y }}
         animate={{ x: position.x, y: position.y }}
         transition={{ x: "x", y: "y" }}
-        drag
-        dragConstraints={{
-          left: 0,
-          top: 0,
-          right: 1000, // change to your desired area width
-          bottom: 1000, // change to your desired area height
-        }}
+        {...dragProps}
         onHoverStart={() => {
           setIsHovered(true);
         }}

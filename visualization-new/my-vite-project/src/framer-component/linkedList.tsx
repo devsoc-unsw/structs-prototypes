@@ -39,6 +39,7 @@ const LinkedList: React.FC<LinkedListState> = ({ graphState }) => {
         config={{
           showHover: false,
           showClick: false,
+          canDrag: false,
         }}
       />
     ));
