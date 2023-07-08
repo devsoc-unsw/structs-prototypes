@@ -36,6 +36,10 @@ const LinkedList: React.FC<LinkedListState> = ({ graphState }) => {
         label={node.label}
         color="#e6f7f6"
         delay={index + 1}
+        config={{
+          showHover: false,
+          showClick: false,
+        }}
       />
     ));
   };

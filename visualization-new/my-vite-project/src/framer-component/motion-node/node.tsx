@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
+import { ControlConfig } from "./controlConfig";
 
 interface Position {
   x: number;
@@ -12,6 +13,8 @@ interface LinkedNodeProps {
   delay: number;
   label: string;
   size: number;
+  config: ControlConfig;
+  onAddNode?: () => void;
 }
 
 const draw = {
@@ -24,26 +27,52 @@ const draw = {
         delay,
         type: "spring",
         bounce: 0,
-        duration: 0.5, // Set the duration to 0.5 seconds when created
+        duration: 0.5,
       },
     };
   },
   x: {
-    transition: { duration: 3 }, // Set the duration to 3 seconds for x changes
+    transition: { duration: 3 },
   },
   y: {
-    transition: { duration: 3 }, // Set the duration to 3 seconds for y changes
+    transition: { duration: 3 },
   },
 };
 
 const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
-  ({ position, color, delay, label, size }, ref) => {
+  ({ position, color, delay, label, size, onAddNode, config }, ref) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const [showAddButton, setShowAddButton] = useState(false);
+
+    const showHover = () => {
+      return config.showHover && isHovered && !showAddButton;
+    }
+    const showClick = () => {
+      return config.showClick && showAddButton;
+    }
     return (
       <motion.g
         ref={ref}
         initial={{ x: position.x, y: position.y }}
         animate={{ x: position.x, y: position.y }}
         transition={{ x: "x", y: "y" }}
+        drag
+        dragConstraints={{
+          left: 0,
+          top: 0,
+          right: 1000, // change to your desired area width
+          bottom: 1000, // change to your desired area height
+        }}
+        onHoverStart={() => {
+          setIsHovered(true);
+        }}
+        onHoverEnd={() => {
+          setIsHovered(false);
+        }}
+        onClick={() => {
+          setIsHovered(false);
+          setShowAddButton(!showAddButton);
+        }}
       >
         <motion.circle
           cx={0}
@@ -55,6 +84,7 @@ const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
           animate="visible"
           custom={delay}
         />
+
         <motion.text
           x={0}
           y={0}
@@ -69,6 +99,70 @@ const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
         >
           {label}
         </motion.text>
+
+        {showHover() && (
+          <motion.foreignObject
+            width={250}
+            height={350}
+            x={size + 10}
+            y={-50}
+            style={{ zIndex: 1000 }}
+          >
+            <div
+              style={{
+                backgroundColor: "white",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "250px",
+                padding: "10px",
+                overflow: "auto",
+                boxSizing: "border-box",
+                border: "2px solid black",
+              }}
+            >
+              <pre style={{ margin: 0 }}>
+                {JSON.stringify(
+                  { position, color, delay, label, size },
+                  null,
+                  2
+                )}
+              </pre>
+            </div>
+          </motion.foreignObject>
+        )}
+
+        {showClick() && (
+          <motion.a
+            whileTap={{ scale: 0.9 }}
+            onClick={(event) => {
+              event.stopPropagation();
+              setShowAddButton(false);
+              onAddNode && onAddNode();
+            }}
+          >
+            <motion.circle
+              cx={size + 20}
+              cy={0}
+              r={20}
+              fill="#727272"
+              stroke="white"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+            ></motion.circle>
+            <motion.text
+              x={size + 20}
+              y={0}
+              textAnchor="middle"
+              fill="white"
+              dy=".3em"
+              fontSize="20px"
+            >
+              +
+            </motion.text>
+          </motion.a>
+        )}
       </motion.g>
     );
   }
