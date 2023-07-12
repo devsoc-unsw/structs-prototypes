@@ -1,7 +1,7 @@
 type LinkedListNode = {
   id: string;
   label: string;
-  isHighlighted?: boolean;
+  isHighlighted: boolean;
   x?: number;
   y?: number;
   index?: number;
@@ -221,11 +221,23 @@ function updateGraph() {
     .attr("cx", (node: LinkedListNode) => node.x)
     .attr("cy", (node: LinkedListNode) => node.y)
     .attr("fill", (node: LinkedListNode) =>
-      highlightedNodes.includes(node.id) ? "#cc1076" : "#AA96DA"
+      node.isHighlighted ? "#cc1076" : "#AA96DA"
     )
     .call(dragDrop);
 
-  nodeElements = nodeEnter.merge(nodeElements);
+  let existingNodes = nodeElements.filter(function (d: string) {
+    return !nodeEnter.data().includes(d);
+  });
+
+  // existingNodes.attr("fill", (node: LinkedListNode) => {
+  //   if (node.isHighlighted) {
+  //     // getSVGCircleOfNode(node.id).animate(100).attr({ fill: "#cc1076" });
+  //     // return "#cc1076";
+  //   } else {
+  //     // getSVGCircleOfNode(node.id).animate(100).attr({ fill: "#AA96DA" });
+  //     // return "#AA96DA";
+  //   }
+  // });
 }
 
 function updateSimulation() {
@@ -287,18 +299,12 @@ updateSimulation();
 
 updateGraph();
 
-// changes should look like:
-// {
-//   modified: [{ id, data, next }];
-//   deleted: [id];
-// }
-
 type LinkedListNextState = {
   modified: {
     id: string;
     data: string;
     next: string;
-    isHighlighted?: boolean; // TODO: support changing whether node is highlighted
+    isHighlighted: boolean;
   }[];
   deleted: string[];
 };
@@ -309,6 +315,18 @@ const simulateNextState = (changes: LinkedListNextState) => {
     // if the node is not new
     if (modifiedNode) {
       modifiedNode.label = modifiedNodeBackend.data; // update label
+
+      // Update highlighting
+      modifiedNode.isHighlighted = modifiedNodeBackend.isHighlighted;
+      if (modifiedNodeBackend.isHighlighted) {
+        getSVGCircleOfNode(modifiedNodeBackend.id)
+          .animate(700)
+          .attr({ fill: "#cc1076" });
+      } else {
+        getSVGCircleOfNode(modifiedNodeBackend.id)
+          .animate(700)
+          .attr({ fill: "#AA96DA" });
+      }
       let modifiedLink = links.findIndex(
         (link) => (link.source as LinkedListNode).id === modifiedNode!.id
       );
@@ -343,6 +361,7 @@ const simulateNextState = (changes: LinkedListNextState) => {
             ? nodes[nodes.length - 1].x + 100
             : 100,
         y: width / 4,
+        isHighlighted: modifiedNodeBackend.isHighlighted,
       });
 
       updateSimulation();
@@ -387,7 +406,7 @@ var draw = SVG().addTo("svg").size(3000, 3000);
 // add a node with no next
 setTimeout(function () {
   simulateNextState({
-    modified: [{ id: "0x1000", data: "0", next: "null" }],
+    modified: [{ id: "0x1000", data: "0", next: "null", isHighlighted: false }],
     deleted: [],
   });
 }, 1000);
@@ -395,7 +414,9 @@ setTimeout(function () {
 // add a node with no next
 setTimeout(function () {
   simulateNextState({
-    modified: [{ id: "0x2000", data: "13", next: "null" }],
+    modified: [
+      { id: "0x2000", data: "13", next: "null", isHighlighted: false },
+    ],
     deleted: [],
   });
 }, 2000);
@@ -403,24 +424,29 @@ setTimeout(function () {
 // change a node's next from null i.e. create an edge
 setTimeout(function () {
   simulateNextState({
-    modified: [{ id: "0x1000", data: "0", next: "0x2000" }],
+    modified: [
+      { id: "0x1000", data: "0", next: "0x2000", isHighlighted: false },
+    ],
     deleted: [],
   });
+  console.log(JSON.parse(JSON.stringify(links)));
 }, 3000);
 
 // add a node with a next i.e. create a node and edge
 setTimeout(function () {
+  console.log(JSON.parse(JSON.stringify(links)));
   simulateNextState({
-    modified: [{ id: "0x3000", data: "5", next: "0x2000" }],
+    modified: [
+      { id: "0x3000", data: "5", next: "0x2000", isHighlighted: false },
+    ],
     deleted: [],
   });
 }, 4000);
 
 // change a node's next to null i.e. remove an edge
 setTimeout(function () {
-  console.log(links);
   simulateNextState({
-    modified: [{ id: "0x3000", data: "5", next: "null" }],
+    modified: [{ id: "0x3000", data: "5", next: "null", isHighlighted: false }],
     deleted: [],
   });
 }, 5000);
@@ -428,7 +454,9 @@ setTimeout(function () {
 // change a node's next from some node to another node i.e. modify an existing edge
 setTimeout(function () {
   simulateNextState({
-    modified: [{ id: "0x1000", data: "5", next: "0x3000" }],
+    modified: [
+      { id: "0x1000", data: "5", next: "0x3000", isHighlighted: false },
+    ],
     deleted: [],
   });
 }, 6000);
@@ -436,7 +464,7 @@ setTimeout(function () {
 // add a node with no next
 setTimeout(function () {
   simulateNextState({
-    modified: [{ id: "0x4000", data: "6", next: "null" }],
+    modified: [{ id: "0x4000", data: "6", next: "null", isHighlighted: false }],
     deleted: [],
   });
 }, 7000);
@@ -460,7 +488,9 @@ setTimeout(function () {
 // change a node's data
 setTimeout(function () {
   simulateNextState({
-    modified: [{ id: "0x3000", data: "93", next: "null" }],
+    modified: [
+      { id: "0x3000", data: "93", next: "null", isHighlighted: false },
+    ],
     deleted: [],
   });
 }, 10000);
@@ -468,21 +498,23 @@ setTimeout(function () {
 // more testing below
 setTimeout(function () {
   simulateNextState({
-    modified: [{ id: "0x1000", data: "1", next: "null" }],
+    modified: [{ id: "0x1000", data: "1", next: "null", isHighlighted: false }],
     deleted: [],
   });
 }, 11000);
 
 setTimeout(function () {
   simulateNextState({
-    modified: [{ id: "0x2000", data: "2", next: "0x1000" }],
+    modified: [
+      { id: "0x2000", data: "2", next: "0x1000", isHighlighted: false },
+    ],
     deleted: [],
   });
 }, 12000);
 
 setTimeout(function () {
   simulateNextState({
-    modified: [{ id: "0x3000", data: "3", next: "null" }],
+    modified: [{ id: "0x3000", data: "3", next: "null", isHighlighted: false }],
     deleted: [],
   });
 }, 13000);
@@ -499,14 +531,46 @@ setTimeout(function () {
 
 setTimeout(function () {
   simulateNextState({
-    modified: [{ id: "0x2000", data: "2", next: "0x3000" }],
+    modified: [
+      { id: "0x2000", data: "2", next: "0x3000", isHighlighted: false },
+    ],
     deleted: [],
   });
 }, 16000);
 
 setTimeout(function () {
   simulateNextState({
-    modified: [{ id: "0x5000", data: "5", next: "0x2000" }],
+    modified: [
+      { id: "0x5000", data: "5", next: "0x2000", isHighlighted: false },
+    ],
     deleted: [],
   });
 }, 17000);
+
+// Highlighting
+setTimeout(function () {
+  simulateNextState({
+    modified: [
+      { id: "0x5000", data: "5", next: "0x2000", isHighlighted: true },
+    ],
+    deleted: [],
+  });
+}, 18000);
+
+// Unhighlighting
+setTimeout(function () {
+  simulateNextState({
+    modified: [
+      { id: "0x5000", data: "5", next: "0x2000", isHighlighted: false },
+    ],
+    deleted: [],
+  });
+}, 19000);
+
+// Creating a new node that starts off highlighted
+setTimeout(function () {
+  simulateNextState({
+    modified: [{ id: "0x6000", data: "6", next: "null", isHighlighted: true }],
+    deleted: [],
+  });
+}, 20000);
