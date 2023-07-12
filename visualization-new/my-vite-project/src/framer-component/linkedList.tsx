@@ -8,7 +8,6 @@ export interface LinkedListState {
 }
 
 const SIZE = 50;
-const SPACE_BETWEEN = 150;
 
 const LinkedList: React.FC<LinkedListState> = ({ graphState }) => {
   const [nodes, setNodes] = useState(graphState);
@@ -27,6 +26,25 @@ const LinkedList: React.FC<LinkedListState> = ({ graphState }) => {
     setNodes(graphState);
   }, [graphState]);
 
+  const renderNodes = () => {
+    return nodes.map((node, index) => (
+      <LinkedNode
+        ref={(ref) => (nodeRefs.current[index] = ref)}
+        key={node.id}
+        position={{ x: node.x, y: node.y }}
+        size={SIZE}
+        label={node.label}
+        color="#e6f7f6"
+        delay={index + 1}
+        config={{
+          showHover: false,
+          showClick: false,
+          canDrag: false,
+        }}
+      />
+    ));
+  };
+
   return (
     <motion.svg
       width={width}
@@ -35,17 +53,7 @@ const LinkedList: React.FC<LinkedListState> = ({ graphState }) => {
       initial="hidden"
       animate="visible"
     >
-      {nodes.map((node, index) => (
-        <LinkedNode
-          ref={(ref) => (nodeRefs.current[index] = ref)} // assign ref
-          key={node.id}
-          position={{ x: node.x, y: node.y }}
-          size={SIZE}
-          label={node.label}
-          color="#e6f7f6"
-          delay={index + 1}
-        />
-      ))}
+      {renderNodes()}
     </motion.svg>
   );
 };
