@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ForceDirectedGraph, { Link, Node } from './component/linkedList';
-import LinkedList from './framer-component/linkedList';
 import { useState, useEffect } from 'react';
+import { DrawingMotions } from './framer-component/drawingMotion';
 
 const initialNodes: Node[] = [
   // add your nodes here
@@ -64,7 +64,7 @@ const RoutesComponent = () => {
           path="/"
           element={<ForceDirectedGraph nodes={nodes} links={links} width={width} height={height} />}
         />
-        <Route path="/linked-node" element={<LinkedList graphState={nodes} />} />
+        <Route path="/linked-node" element={<DrawingMotions graphState={nodes} />} />
       </Routes>
     </Router>
   );

@@ -2,14 +2,16 @@ import { motion } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import LinkedNode from './motion-node/node';
 import { Node } from '../component/linkedList';
+import { UiState } from './motion-node/controlConfig';
 
 export interface LinkedListState {
   graphState: Node[];
+  settings: UiState;
 }
 
 const SIZE = 50;
 
-const LinkedList: React.FC<LinkedListState> = ({ graphState }) => {
+const LinkedList: React.FC<LinkedListState> = ({ graphState, settings }) => {
   const [nodes, setNodes] = useState(graphState);
   const nodeRefs = useRef<(SVGSVGElement | null)[]>([]);
   const width = window.innerWidth;
@@ -36,11 +38,7 @@ const LinkedList: React.FC<LinkedListState> = ({ graphState }) => {
         label={node.label}
         color="#e6f7f6"
         delay={index + 1}
-        config={{
-          showHover: false,
-          showClick: false,
-          canDrag: false,
-        }}
+        config={settings}
       />
     ));
   };

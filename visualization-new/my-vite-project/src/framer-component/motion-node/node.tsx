@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { forwardRef, useState } from "react";
-import { ControlConfig } from "./controlConfig";
+import { UiState } from "./controlConfig";
 
 interface Position {
   x: number;
@@ -13,9 +13,17 @@ interface LinkedNodeProps {
   delay: number;
   label: string;
   size: number;
-  config: ControlConfig;
+  config: UiState;
   onAddNode?: () => void;
 }
+
+export interface DrawableNode {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+}
+
 
 const draw = {
   hidden: { opacity: 0 },
