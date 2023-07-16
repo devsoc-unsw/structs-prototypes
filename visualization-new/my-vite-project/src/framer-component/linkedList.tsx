@@ -49,7 +49,7 @@ const LinkedList: React.FC<LinkedListState> = ({ linkedListState, settings }) =>
   useEffect(() => {
     console.log('settings changes!!!', settings);
     
-    ['showHover', 'showClick', 'canDrag'].forEach((key) => {
+    ['showHover', 'showClick', 'canDrag', 'debug'].forEach((key) => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       if (settings[key] !== localGlobalSetting[key]) {
@@ -61,33 +61,37 @@ const LinkedList: React.FC<LinkedListState> = ({ linkedListState, settings }) =>
     setDrawables(renderNodes());
   }, [settings]);
 
+  const onReload = () => {
+    console.log('Reload called? Node should updated?');
+    setDrawables(renderNodes());
+  }
   const renderNodes = () => {
     return Object.values(state.cacheEntity).map((entity, index) => {
       switch (entity.type) {
         case EntityType.NODE:
-          console.log('Load Nodes');
           return <LinkedNode
                   ref={(ref) => (nodeRefs.current[index] = ref)}
                   key={entity.uid}
-                  position={{ x: entity.x, y: entity.y }}
-                  size={SIZE}
-                  label={entity.title}
-                  color="#e6f7f6"
+                  nodeUid={entity.uid}
+                  graph={state}
                   delay={index + 1}
                   config={settings}
+                  onReload={onReload}
                 />;
         case EntityType.EDGE:
-          console.log('Load Edges');
           return <Edge
                   ref={(ref) => (nodeRefs.current[index] = ref)}
                   key={entity.uid}
                   color="#h122f6"
                   delay={index + 1}
-                  edge={entity}
+                  graph={state}
+                  edgeUid={entity.uid}
                 />;
       }
     });
   };
+
+
 
   const [drawables, setDrawables] = useState<JSX.Element[]>(renderNodes());
 

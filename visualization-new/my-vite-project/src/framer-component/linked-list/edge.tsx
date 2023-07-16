@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
 import React, { forwardRef } from 'react';
-import { EdgeEntity } from '../types/graphState';
+import { FrontendLinkedListGraph } from '../types/graphState';
 
 interface EdgeProps {
-  edge: EdgeEntity;
+  edgeUid: string;
+  graph: FrontendLinkedListGraph;
   color: string;
   delay: number;
 }
@@ -35,8 +36,10 @@ const createArrowMarker = (id: string, color: string) => (
 );
 
 const Edge = forwardRef<SVGSVGElement, EdgeProps>(
-  ({ edge, color, delay }, ref) => {
-    const markerId = `arrow-${edge.uid}`;
+  ({ edgeUid, graph, delay }, ref) => {
+    const edge = graph.cacheEntity[edgeUid];
+    if (edge.type !== 'edge') return;
+    const markerId = `arrow-${edgeUid}`;
 
     return (
       <motion.g

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { forwardRef, useState } from "react";
 import { UiState } from "../types/uiState";
+import { FrontendLinkedListGraph } from "../types/graphState";
 
 interface Position {
   x: number;
@@ -8,13 +9,12 @@ interface Position {
 }
 
 interface NodePros {
-  position: Position;
-  color: string;
   delay: number;
-  label: string;
-  size: number;
+  nodeUid: string;
+  graph: FrontendLinkedListGraph;
   config: UiState;
   onAddNode?: () => void;
+  onReload?: () => void;
 }
 
 const draw = {
@@ -40,9 +40,13 @@ const draw = {
 };
 
 const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
-  ({ position, color, delay, label, size, onAddNode, config }, ref) => {
+  ({ delay, nodeUid, graph, onAddNode, config, onReload }, ref) => {
     const [isHovered, setIsHovered] = useState(false);
     const [showAddButton, setShowAddButton] = useState(false);
+    
+    const  nodeEntity = graph.cacheEntity[nodeUid];
+    if (nodeEntity.type !== "node") return;
+    const {x, y, colorHex, title, size} = nodeEntity;
 
     const showHover = () => {
       return config.showHover && isHovered && !showAddButton;
@@ -65,8 +69,8 @@ const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
     return (
       <motion.g
         ref={ref}
-        initial={{ x: position.x, y: position.y }}
-        animate={{ x: position.x, y: position.y }}
+        initial={{ x: x, y: y }}
+        animate={{ x: x, y: y }}
         transition={{ x: "x", y: "y" }}
         {...dragProps}
         onHoverStart={() => {
@@ -79,12 +83,21 @@ const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
           setIsHovered(false);
           setShowAddButton(!showAddButton);
         }}
+        onDragEnd={(event, info) => {
+          nodeEntity.x += info.delta.x;
+          nodeEntity.y += info.delta.y;
+
+          if (onReload) {
+            console.log('In nodes perspective, update!!!');
+            onReload();
+          }
+        }}
       >
         <motion.circle
           cx={0}
           cy={0}
           r={size}
-          stroke={color}
+          stroke={colorHex}
           variants={draw}
           initial="hidden"
           animate="visible"
@@ -95,7 +108,7 @@ const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
           x={0}
           y={0}
           textAnchor="middle"
-          fill={color}
+          fill={colorHex}
           dy=".3em"
           fontSize="20px"
           initial="hidden"
@@ -103,7 +116,7 @@ const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
           variants={draw}
           custom={delay}
         >
-          {label}
+          {title}
         </motion.text>
 
         
@@ -130,7 +143,7 @@ const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
             >
               <pre style={{ margin: 0 }}>
                 {JSON.stringify(
-                  { position, color, delay, label, size },
+                  nodeEntity,
                   null,
                   2
                 )}

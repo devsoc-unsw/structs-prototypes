@@ -1,18 +1,28 @@
-import React, { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowPointer, faLightbulb, faLock, faUnlock } from '@fortawesome/free-solid-svg-icons'; // Add faLock and faUnlock
-import { UiState } from './types/uiState';
-import './css/controlPanel.css';
+import React, { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowPointer,
+  faBug,
+  faLightbulb,
+  faLock,
+  faUnlock,
+} from "@fortawesome/free-solid-svg-icons"; // Add faLock and faUnlock
+import { UiState } from "./types/uiState";
+import "./css/controlPanel.css";
 
 interface ControlPanelProps {
   settings: UiState;
   setSettings: React.Dispatch<React.SetStateAction<UiState>>;
 }
 
-export const ControlPanel: React.FC<ControlPanelProps> = ({settings, setSettings}) => {
+export const ControlPanel: React.FC<ControlPanelProps> = ({
+  settings,
+  setSettings,
+}) => {
   const [shakePointer, setShakePointer] = useState(false);
   const [shakeLightbulb, setShakeLightbulb] = useState(false);
   const [isLocked, setIsLocked] = useState(!settings.canDrag);
+  const [isDebug, setIsDebug] = useState(settings.debug);
 
   const handlePointerClick = () => {
     setShakePointer(true);
@@ -26,11 +36,17 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({settings, setSettings
 
   const handleLockClick = () => {
     setIsLocked(!isLocked);
-    setSettings({...settings, canDrag: isLocked});
+    setSettings({ ...settings, canDrag: isLocked });
+  };
+
+  const handleDebugClick = () => {
+    // added this function
+    setIsDebug(!isDebug);
+    setSettings({ ...settings, debug: isDebug });
   };
 
   return (
-    <div style={{marginTop: '20px'}}>
+    <div style={{ marginTop: "20px" }}>
       <div className="icon-row">
         <FontAwesomeIcon
           icon={faArrowPointer}
@@ -47,7 +63,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({settings, setSettings
           className="fa-2x icon-item"
           onClick={handleLightbulbClick}
         />
-        <span className="tooltip">Plan to implement admin feature boo booe</span>
+        <span className="tooltip">
+          Plan to implement admin feature boo booe
+        </span>
       </div>
       <div className="icon-row">
         <FontAwesomeIcon
@@ -55,7 +73,17 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({settings, setSettings
           className="fa-2x icon-item"
           onClick={handleLockClick}
         />
-        <span className="tooltip">Click to {isLocked ? 'lock' : 'unlock'}</span> {/* Change tooltip text based on isLocked state */}
+        <span className="tooltip">Click to {isLocked ? "lock" : "unlock"}</span>{" "}
+        {/* Change tooltip text based on isLocked state */}
+      </div>
+      <div className="icon-row">
+        <FontAwesomeIcon
+          icon={faBug} // Use faBug icon
+          className="fa-2x icon-item"
+          onClick={handleDebugClick} // Use handleDebugClick function
+        />
+        <span className="tooltip">Debug Mode: {isDebug ? "On" : "Off"}</span>{" "}
+        {/* Change tooltip text based on isDebug state */}
       </div>
     </div>
   );
