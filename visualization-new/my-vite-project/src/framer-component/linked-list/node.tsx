@@ -1,20 +1,20 @@
 import { motion } from "framer-motion";
 import { forwardRef, useState } from "react";
-import { ControlConfig } from "./controlConfig";
+import { UiState } from "../types/uiState";
+import { FrontendLinkedListGraph } from "../types/graphState";
 
 interface Position {
   x: number;
   y: number;
 }
 
-interface LinkedNodeProps {
-  position: Position;
-  color: string;
+interface NodePros {
   delay: number;
-  label: string;
-  size: number;
-  config: ControlConfig;
+  nodeUid: string;
+  graph: FrontendLinkedListGraph;
+  config: UiState;
   onAddNode?: () => void;
+  onReload?: () => void;
 }
 
 const draw = {
@@ -39,10 +39,14 @@ const draw = {
   },
 };
 
-const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
-  ({ position, color, delay, label, size, onAddNode, config }, ref) => {
+const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
+  ({ delay, nodeUid, graph, onAddNode, config, onReload }, ref) => {
     const [isHovered, setIsHovered] = useState(false);
     const [showAddButton, setShowAddButton] = useState(false);
+    
+    const  nodeEntity = graph.cacheEntity[nodeUid];
+    if (nodeEntity.type !== "node") return;
+    const {x, y, colorHex, title, size} = nodeEntity;
 
     const showHover = () => {
       return config.showHover && isHovered && !showAddButton;
@@ -51,7 +55,7 @@ const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
       return config.showClick && showAddButton;
     }
 
-    const dragProps: Partial<{ drag: boolean | "x" | "y"; dragConstraints: { left: number; right: number; top: number; bottom: number } }> = config.canDrag ? {
+    const dragProps: Partial<{ drag: boolean | "x" | "y"; dragConstraints: { left: number; right: number; top: number; bottom: number }, dragMomentum: boolean }> = config.canDrag ? {
       drag: true,
       dragConstraints: {
         left: 0,
@@ -59,13 +63,14 @@ const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
         right: 1000, // change to your desired area width
         bottom: 1000, // change to your desired area height
       },
+      dragMomentum: false
     } : {}
   
     return (
       <motion.g
         ref={ref}
-        initial={{ x: position.x, y: position.y }}
-        animate={{ x: position.x, y: position.y }}
+        initial={{ x: x, y: y }}
+        animate={{ x: x, y: y }}
         transition={{ x: "x", y: "y" }}
         {...dragProps}
         onHoverStart={() => {
@@ -78,12 +83,22 @@ const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
           setIsHovered(false);
           setShowAddButton(!showAddButton);
         }}
+        onDragEnd={(event, info) => {
+          nodeEntity.x += info.offset.x;
+          nodeEntity.y += info.offset.y;
+
+          if (onReload) {
+            console.log('In nodes perspective, update!!!', info);
+
+            onReload();
+          }
+        }}
       >
         <motion.circle
           cx={0}
           cy={0}
           r={size}
-          stroke={color}
+          stroke={colorHex}
           variants={draw}
           initial="hidden"
           animate="visible"
@@ -94,7 +109,7 @@ const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
           x={0}
           y={0}
           textAnchor="middle"
-          fill={color}
+          fill={colorHex}
           dy=".3em"
           fontSize="20px"
           initial="hidden"
@@ -102,10 +117,11 @@ const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
           variants={draw}
           custom={delay}
         >
-          {label}
+          {title}
         </motion.text>
 
-        {showHover() && (
+        
+        {showHover() && ( // Refactor to according to uiState, to have different hover, click, etc. effects
           <motion.foreignObject
             width={250}
             height={350}
@@ -128,7 +144,7 @@ const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
             >
               <pre style={{ margin: 0 }}>
                 {JSON.stringify(
-                  { position, color, delay, label, size },
+                  nodeEntity,
                   null,
                   2
                 )}

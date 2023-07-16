@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ForceDirectedGraph, { Link, Node } from './component/linkedList';
-import LinkedList from './framer-component/linkedList';
 import { useState, useEffect } from 'react';
+import { DrawingMotions } from './framer-component/drawingMotion';
+import { BackendLinkedList } from './framer-component/types/graphState';
 
 const initialNodes: Node[] = [
   // add your nodes here
@@ -42,6 +43,31 @@ const links: Link[] = [
 const width = 800; // specify width here
 const height = 600; // specify height here
 
+const framerNodes: BackendLinkedList = {
+  nodes: [
+    {
+      nodeId: '0x000001',
+      value: 'Node 1',
+      next: '0x000002',
+    },
+    {
+      nodeId: '0x000002',
+      value: 'Node 2',
+      next: '0x000003',
+    },
+    {
+      nodeId: '0x000003',
+      value: 'Node 3',
+      next: '0x000004',
+    },
+    {
+      nodeId: '0x000004',
+      value: 'Node 4',
+      next: null,
+    },
+  ],
+};
+
 const RoutesComponent = () => {
   const [nodes, setNodes] = useState(initialNodes);
 
@@ -64,7 +90,7 @@ const RoutesComponent = () => {
           path="/"
           element={<ForceDirectedGraph nodes={nodes} links={links} width={width} height={height} />}
         />
-        <Route path="/linked-node" element={<LinkedList graphState={nodes} />} />
+        <Route path="/linked-node" element={<DrawingMotions nodes={framerNodes.nodes}/>} />
       </Routes>
     </Router>
   );
