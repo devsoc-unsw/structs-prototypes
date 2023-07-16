@@ -88,8 +88,6 @@ const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
           nodeEntity.y += info.offset.y;
 
           if (onReload) {
-            console.log('In nodes perspective, update!!!', info);
-
             onReload();
           }
         }}

@@ -15,9 +15,10 @@ const draw = {
     pathLength: 1,
     opacity: 1,
     transition: {
-      pathLength: { delay: i * 0.2, duration: 0.5, ease: 'easeInOut' },
-      opacity: { delay: i * 0.2, duration: 0.01 }
-    }
+      type: 'spring',
+      pathLength: { delay: i * 0.2, duration: 0.5, ease: [0.43, 0.13, 0.23, 0.96] },
+      opacity: { delay: i * 0.2, duration: 0.01 },
+    },
   }),
 };
 
@@ -48,15 +49,15 @@ const Edge = forwardRef<SVGSVGElement, EdgeProps>(
         variants={draw}
         initial="hidden"
         animate="visible"
+        transition={{ type: 'spring' }}
       >
         <defs>
           {createArrowMarker(markerId, '#DE3163')}
         </defs>
         <motion.line
-          x1={edge.from.x + 60}
-          y1={edge.from.y}
-          x2={edge.to.x - 75}
-          y2={edge.to.y}
+          initial={{ x1: edge.from.x + 60,y1: edge.from.y,x2: edge.to.x - 75, y2: edge.to.y }}
+          animate={{ x1: edge.from.x + 60, y1: edge.from.y, x2: edge.to.x - 75, y2: edge.to.y }}
+          transition={{ type: 'spring', bounce: 0.025}}
           stroke={'#DE3163'}
           strokeWidth={6}
           custom={2}

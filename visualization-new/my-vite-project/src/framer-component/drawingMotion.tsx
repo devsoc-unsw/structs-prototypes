@@ -148,6 +148,7 @@ function debug(currGraphState: FrontendLinkedListGraph) {
     }),
   }
 
+  // @ts-ignore
   nodesAndEdges.nodes = currGraphState.nodes.map(node => {
     return stringifyNode(node);
   });
