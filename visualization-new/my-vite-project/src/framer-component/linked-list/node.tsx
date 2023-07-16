@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
 import { forwardRef, useState } from "react";
-import { UiState } from "./controlConfig";
+import { UiState } from "../types/uiState";
 
 interface Position {
   x: number;
   y: number;
 }
 
-interface LinkedNodeProps {
+interface NodePros {
   position: Position;
   color: string;
   delay: number;
@@ -16,14 +16,6 @@ interface LinkedNodeProps {
   config: UiState;
   onAddNode?: () => void;
 }
-
-export interface DrawableNode {
-  id: string;
-  label: string;
-  x: number;
-  y: number;
-}
-
 
 const draw = {
   hidden: { opacity: 0 },
@@ -47,7 +39,7 @@ const draw = {
   },
 };
 
-const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
+const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
   ({ position, color, delay, label, size, onAddNode, config }, ref) => {
     const [isHovered, setIsHovered] = useState(false);
     const [showAddButton, setShowAddButton] = useState(false);
@@ -59,7 +51,7 @@ const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
       return config.showClick && showAddButton;
     }
 
-    const dragProps: Partial<{ drag: boolean | "x" | "y"; dragConstraints: { left: number; right: number; top: number; bottom: number } }> = config.canDrag ? {
+    const dragProps: Partial<{ drag: boolean | "x" | "y"; dragConstraints: { left: number; right: number; top: number; bottom: number }, dragMomentum: boolean }> = config.canDrag ? {
       drag: true,
       dragConstraints: {
         left: 0,
@@ -67,6 +59,7 @@ const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
         right: 1000, // change to your desired area width
         bottom: 1000, // change to your desired area height
       },
+      dragMomentum: false
     } : {}
   
     return (
@@ -113,7 +106,8 @@ const LinkedNode = forwardRef<SVGSVGElement, LinkedNodeProps>(
           {label}
         </motion.text>
 
-        {showHover() && (
+        
+        {showHover() && ( // Refactor to according to uiState, to have different hover, click, etc. effects
           <motion.foreignObject
             width={250}
             height={350}

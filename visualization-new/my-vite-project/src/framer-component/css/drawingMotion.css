@@ -1,0 +1,18 @@
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+.control-panel {
+  flex: 0 0 4.5%; 
+  max-width: 60px;
+  background-color: #333;
+  color: #fff;
+  z-index: 10;
+}
+
+.linked-list {
+  flex: 1; /* Takes the rest of the space */
+  background-color: #f0f0f0; /* Light background */
+  z-index: 1;
+}

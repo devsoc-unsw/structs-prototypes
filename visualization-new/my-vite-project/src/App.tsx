@@ -64,7 +64,7 @@ const RoutesComponent = () => {
           path="/"
           element={<ForceDirectedGraph nodes={nodes} links={links} width={width} height={height} />}
         />
-        <Route path="/linked-node" element={<DrawingMotions graphState={nodes} />} />
+        <Route path="/linked-node" element={<DrawingMotions nodes={[]}/>} />
       </Routes>
     </Router>
   );
