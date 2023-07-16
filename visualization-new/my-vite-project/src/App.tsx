@@ -48,17 +48,17 @@ const framerNodes: BackendLinkedList = {
     {
       nodeId: '0x000001',
       value: 'Node 1',
-      next: '0x2',
+      next: '0x000002',
     },
     {
       nodeId: '0x000002',
       value: 'Node 2',
-      next: '0x3',
+      next: '0x000003',
     },
     {
       nodeId: '0x000003',
       value: 'Node 3',
-      next: '0x4',
+      next: '0x000004',
     },
     {
       nodeId: '0x000004',

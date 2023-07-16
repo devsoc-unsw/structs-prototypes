@@ -26,7 +26,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({settings, setSettings
 
   const handleLockClick = () => {
     setIsLocked(!isLocked);
-    setSettings({...settings, canDrag: !isLocked});
+    setSettings({...settings, canDrag: isLocked});
   };
 
   return (
@@ -38,7 +38,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({settings, setSettings
           className="fa-2x icon-item"
           onClick={handlePointerClick}
         />
-        <span className="tooltip">Currently Useless, discuss this feature more</span>
+        <span className="tooltip">Plan to implement admin feature boo boo</span>
       </div>
       <div className="icon-row">
         <FontAwesomeIcon
@@ -47,11 +47,11 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({settings, setSettings
           className="fa-2x icon-item"
           onClick={handleLightbulbClick}
         />
-        <span className="tooltip">Currently Useless, discuss this feature more</span>
+        <span className="tooltip">Plan to implement admin feature boo booe</span>
       </div>
       <div className="icon-row">
         <FontAwesomeIcon
-          icon={isLocked ? faUnlock : faLock} // Switch between faLock and faUnlock based on isLocked state
+          icon={isLocked ? faLock : faUnlock} // Switch between faLock and faUnlock based on isLocked state
           className="fa-2x icon-item"
           onClick={handleLockClick}
         />

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from "react";
 import LinkedList from "./linkedList";
 import { DEFAULT_UISTATE, UiState } from "./types/uiState";
@@ -77,6 +78,7 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
       head: nodeEntities[0],
     }
 
+    console.log(frontendState);
     return frontendState;
   };
 
@@ -88,12 +90,11 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
 
     setCurrGraphState(newFrontendState);
     setHistoryGraphState([...historyGraphState, newFrontendState]);
-  }, [historyGraphState, state]);
+  }, [state]);
 
   /**
    * Hard code for now yea yea
    */
-
   return (
     <div>
       <div className="container">
