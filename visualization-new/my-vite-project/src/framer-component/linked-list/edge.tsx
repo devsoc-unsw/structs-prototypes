@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import React, { forwardRef } from 'react';
-import { FrontendLinkedListGraph } from '../types/graphState';
+import { EdgeEntity, FrontendLinkedListGraph, NodeEntity } from '../types/graphState';
 
 interface EdgeProps {
   edgeUid: string;
@@ -36,6 +36,22 @@ const createArrowMarker = (id: string, color: string) => (
   </marker>
 );
 
+function calculateCoordinates(from: NodeEntity, to: NodeEntity, offsetDistance = 80) {
+  const deltaX = to.x - from.x;
+  const deltaY = to.y - from.y;
+  const angle = Math.atan2(deltaY, deltaX);
+
+  // Coordinates for the starting point
+  const x1 = from.x + Math.cos(angle) * offsetDistance * 0.8;
+  const y1 = from.y + Math.sin(angle) * offsetDistance  * 0.8;
+
+  // Coordinates for the end point
+  const x2 = to.x - Math.cos(angle) * offsetDistance;
+  const y2 = to.y - Math.sin(angle) * offsetDistance;
+
+  return { x1, y1, x2, y2 };
+}
+
 const Edge = forwardRef<SVGSVGElement, EdgeProps>(
   ({ edgeUid, graph, delay }, ref) => {
     const edge = graph.cacheEntity[edgeUid];
@@ -55,8 +71,8 @@ const Edge = forwardRef<SVGSVGElement, EdgeProps>(
           {createArrowMarker(markerId, '#DE3163')}
         </defs>
         <motion.line
-          initial={{ x1: edge.from.x + 60,y1: edge.from.y,x2: edge.to.x - 75, y2: edge.to.y }}
-          animate={{ x1: edge.from.x + 60, y1: edge.from.y, x2: edge.to.x - 75, y2: edge.to.y }}
+          initial={calculateCoordinates(edge.from, edge.to)}
+          animate={calculateCoordinates(edge.from, edge.to)}
           transition={{ type: 'spring', bounce: 0.025}}
           stroke={'#DE3163'}
           strokeWidth={6}
