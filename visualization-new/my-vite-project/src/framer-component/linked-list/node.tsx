@@ -84,11 +84,12 @@ const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
           setShowAddButton(!showAddButton);
         }}
         onDragEnd={(event, info) => {
-          nodeEntity.x += info.delta.x;
-          nodeEntity.y += info.delta.y;
+          nodeEntity.x += info.offset.x;
+          nodeEntity.y += info.offset.y;
 
           if (onReload) {
-            console.log('In nodes perspective, update!!!');
+            console.log('In nodes perspective, update!!!', info);
+
             onReload();
           }
         }}
