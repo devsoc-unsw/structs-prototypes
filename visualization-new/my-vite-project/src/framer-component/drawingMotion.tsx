@@ -34,31 +34,38 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
         colorHex: '#FFFFFF', // default color
         size: 50, // default size
         edges: [], // will be filled in the next step
-        x: index * 100, // simple positioning
+        x: 200 + index * 200, // simple positioning
         y: 100, // simple positioning
       };
       nodeEntities.push(nodeEntity);
-  
+    });
+
+    state.nodes.forEach((node) => {
+      const nodeEntity: NodeEntity | undefined = nodeEntities.find(n => n.uid === node.nodeId);
+      if (!nodeEntity) return;
+
       // If there's a next node, create an edge between the current node and the next node
       if (node.next) {
         const nextNode = nodeMapping[node.next];
-        if (nextNode) {
+        if (nextNode === undefined) return;
+        const toNode =  nodeEntities.find(n => n.uid === nextNode.nodeId);
+        if (nextNode && toNode) {
           const edgeEntity: EdgeEntity = {
             uid: `${node.nodeId}-${nextNode.nodeId}`, 
             type: EntityType.EDGE,
             from: nodeEntity,
-            to: nodeEntities.find(n => n.uid === nextNode.nodeId)!, // It's sure to find because we've already created all the nodes
+            to: toNode, // It's sure to find because we've already created all the nodes
             label: '', // you might need a better way to label the edge
             colorHex: '#FFFFFF', // default color
           };
           edgeEntities.push(edgeEntity);
-  
+
           // Attach this edge to the node
           nodeEntity.edges.push(edgeEntity);
         }
       }
     });
-
+    
     [...nodeEntities, ...edgeEntities].forEach((entity) => {
       cacheEntity[entity.uid] = entity;
     });
@@ -75,13 +82,13 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
 
   const initialFrontendState = parseState(state);
   const [currGraphState, setCurrGraphState] = useState<FrontendLinkedListGraph>(initialFrontendState);
-  const [histroyGraphState, setHistoryGraphState] = useState<FrontendLinkedListGraph[]>([initialFrontendState]);
+  const [historyGraphState, setHistoryGraphState] = useState<FrontendLinkedListGraph[]>([initialFrontendState]);
   useEffect(() => {
     const newFrontendState = parseState(state);
 
     setCurrGraphState(newFrontendState);
-    setHistoryGraphState([...histroyGraphState, newFrontendState]);
-  }, [state]);
+    setHistoryGraphState([...historyGraphState, newFrontendState]);
+  }, [historyGraphState, state]);
 
   /**
    * Hard code for now yea yea
