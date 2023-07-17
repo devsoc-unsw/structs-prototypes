@@ -13,6 +13,7 @@ import {
   FrontendLinkedListGraph,
   NodeEntity,
 } from "./types/graphState";
+import ReactJson from "react-json-view";
 
 export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
   const [settings, setSettings] = useState<UiState>(DEFAULT_UISTATE);
@@ -97,6 +98,14 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
   const [historyGraphState, setHistoryGraphState] = useState<
     FrontendLinkedListGraph[]
   >([initialFrontendState]);
+
+  const onJsonChange = (edit: any) => {
+    const newFrontendState = parseState(edit.updated_src);
+
+    setCurrGraphState(newFrontendState);
+    setHistoryGraphState([...historyGraphState, newFrontendState]);
+  };
+
   useEffect(() => {
     const newFrontendState = parseState(state);
 
@@ -121,36 +130,20 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
         <div className="linked-list">
           <LinkedList settings={settings} linkedListState={currGraphState} setSettings={setSettings}/>
         </div>
-        {settings.debug && ( // this is the conditional JSX rendering based on debug mode
-          <div className="DEBUG">
-            <pre>{debug(currGraphState)}</pre>
-          </div>
-        )}
+        {settings.debug && (
+        <div className="DEBUG">
+          <pre>
+            <ReactJson
+              src={currGraphState}
+              onEdit={onJsonChange}
+              onDelete={onJsonChange}
+              onAdd={onJsonChange}
+              name={null} // Removes the root node
+            />
+          </pre>
+        </div>
+      )}
       </div>
     </div>
   );
 };
-
-function debug(currGraphState: FrontendLinkedListGraph) {
-  console.log('called');
-  const stringifyNode = (node: any) => {
-    const obj = {...node};
-    obj.edges = null;
-    return obj;
-  }
-  const nodesAndEdges = {
-    edges: currGraphState.edges.map(edge => {
-      const obj = {...edge}
-      obj.from = stringifyNode(edge.from);
-      obj.to = stringifyNode(edge.to);
-      return obj
-    }),
-  }
-
-  // @ts-ignore
-  nodesAndEdges.nodes = currGraphState.nodes.map(node => {
-    return stringifyNode(node);
-  });
-
-  return JSON.stringify(nodesAndEdges ?? {}, null, 2);
-}

@@ -22,7 +22,7 @@
 
 .DEBUG {
   flex: 0 0 30%;
-  min-width: 300px;
+  min-width: 500px;
   background-color: #ccc; /* Change the background color to make it visible */
   z-index: 1; /* Adjust the z-index if necessary */
   overflow-y: auto;
