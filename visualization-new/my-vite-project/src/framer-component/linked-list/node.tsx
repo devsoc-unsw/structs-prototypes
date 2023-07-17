@@ -116,7 +116,7 @@ const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
         </motion.text>
 
         
-        {showHover() && ( // Refactor to according to uiState, to have different hover, click, etc. effects
+        {showClick() && ( // Refactor to according to uiState, to have different hover, click, etc. effects
           <motion.foreignObject
             width={250}
             height={350}
@@ -148,7 +148,7 @@ const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
           </motion.foreignObject>
         )}
 
-        {showClick() && (
+        {false && (
           <motion.a
             whileTap={{ scale: 0.9 }}
             onClick={(event) => {
