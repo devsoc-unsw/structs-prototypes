@@ -39,11 +39,11 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
         uid: node.nodeId,
         type: EntityType.NODE,
         title: node.value ? node.value.toString() : "",
-        colorHex: "#FFFFFF", // default color
-        size: 50, // default size
-        edges: [], // will be filled in the next step
-        x: 200 + index * 200, // simple positioning
-        y: 100, // simple positioning
+        colorHex: "#FFFFFF",
+        size: 50,
+        edges: [],
+        x: 200 + index * 200,
+        y: 100,
       };
       nodeEntities.push(nodeEntity);
     });

@@ -1,6 +1,8 @@
 .container {
   display: flex;
   height: 100vh;
+  max-width: 1200px;
+  min-width: 1200px;
 }
 
 .control-panel {
@@ -12,7 +14,16 @@
 }
 
 .linked-list {
-  flex: 1; /* Takes the rest of the space */
+  flex: 0 0 80%; /* Takes the rest of the space */
+  max-width: 1200px;
   background-color: #f0f0f0; /* Light background */
   z-index: 1;
+}
+
+.DEBUG {
+  flex: 0 0 30%;
+  min-width: 300px;
+  background-color: #ccc; /* Change the background color to make it visible */
+  z-index: 1; /* Adjust the z-index if necessary */
+  overflow-y: auto;
 }
