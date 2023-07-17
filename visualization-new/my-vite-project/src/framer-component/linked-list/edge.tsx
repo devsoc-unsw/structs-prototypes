@@ -1,12 +1,11 @@
 import { motion } from 'framer-motion';
-import React, { forwardRef } from 'react';
-import { EdgeEntity, FrontendLinkedListGraph, NodeEntity } from '../types/graphState';
+import { forwardRef } from 'react';
+import { FrontendLinkedListGraph, NodeEntity } from '../types/graphState';
 
 interface EdgeProps {
   edgeUid: string;
   graph: FrontendLinkedListGraph;
   color: string;
-  delay: number;
 }
 
 const draw = {
@@ -36,7 +35,10 @@ const createArrowMarker = (id: string, color: string) => (
   </marker>
 );
 
-function calculateCoordinates(from: NodeEntity, to: NodeEntity, offsetDistance = 80) {
+function calculateCoordinates(fromUid: string, toUid: string, graph: FrontendLinkedListGraph, offsetDistance = 80) {
+  const from: NodeEntity = graph.cacheEntity[fromUid] as NodeEntity;
+  const to: NodeEntity = graph.cacheEntity[toUid] as NodeEntity;
+  
   const deltaX = to.x - from.x;
   const deltaY = to.y - from.y;
   const angle = Math.atan2(deltaY, deltaX);
@@ -53,7 +55,7 @@ function calculateCoordinates(from: NodeEntity, to: NodeEntity, offsetDistance =
 }
 
 const Edge = forwardRef<SVGSVGElement, EdgeProps>(
-  ({ edgeUid, graph, delay }, ref) => {
+  ({ edgeUid, graph }, ref) => {
     const edge = graph.cacheEntity[edgeUid];
     if (edge.type !== 'edge') return;
     const markerId = `arrow-${edgeUid}`;
@@ -61,7 +63,6 @@ const Edge = forwardRef<SVGSVGElement, EdgeProps>(
     return (
       <motion.g
         ref={ref}
-        custom={delay}
         variants={draw}
         initial="hidden"
         animate="visible"
@@ -71,8 +72,8 @@ const Edge = forwardRef<SVGSVGElement, EdgeProps>(
           {createArrowMarker(markerId, '#DE3163')}
         </defs>
         <motion.line
-          initial={calculateCoordinates(edge.from, edge.to)}
-          animate={calculateCoordinates(edge.from, edge.to)}
+          initial={calculateCoordinates(edge.from, edge.to, graph)}
+          animate={calculateCoordinates(edge.from, edge.to, graph)}
           transition={{ type: 'spring', bounce: 0.025}}
           stroke={'#DE3163'}
           strokeWidth={6}

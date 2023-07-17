@@ -63,15 +63,15 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
           const edgeEntity: EdgeEntity = {
             uid: `${node.nodeId}-${nextNode.nodeId}`,
             type: EntityType.EDGE,
-            from: nodeEntity,
-            to: toNode, // It's sure to find because we've already created all the nodes
+            from: nodeEntity.uid,
+            to: toNode.uid, // It's sure to find because we've already created all the nodes
             label: "", // you might need a better way to label the edge
             colorHex: "#FFFFFF", // default color
           };
           edgeEntities.push(edgeEntity);
 
           // Attach this edge to the node
-          nodeEntity.edges.push(edgeEntity);
+          nodeEntity.edges.push(edgeEntity.uid);
         }
       }
     });
@@ -91,7 +91,6 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
     return frontendState;
   };
 
-  console.log("Element reload??");
   const initialFrontendState = parseState(state);
   const [currGraphState, setCurrGraphState] =
     useState<FrontendLinkedListGraph>(initialFrontendState);
@@ -120,7 +119,7 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
           <ControlPanel settings={settings} setSettings={setSettings} />
         </div>
         <div className="linked-list">
-          <LinkedList settings={settings} linkedListState={currGraphState} />
+          <LinkedList settings={settings} linkedListState={currGraphState} setSettings={setSettings}/>
         </div>
         {settings.debug && ( // this is the conditional JSX rendering based on debug mode
           <div className="DEBUG">

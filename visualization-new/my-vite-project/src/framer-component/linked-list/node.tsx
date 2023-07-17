@@ -3,18 +3,13 @@ import { forwardRef, useState } from "react";
 import { UiState } from "../types/uiState";
 import { FrontendLinkedListGraph } from "../types/graphState";
 
-interface Position {
-  x: number;
-  y: number;
-}
-
 interface NodePros {
-  delay: number;
   nodeUid: string;
   graph: FrontendLinkedListGraph;
   config: UiState;
-  onAddNode?: () => void;
-  onReload?: () => void;
+  setConfig: React.Dispatch<React.SetStateAction<UiState>>;
+  onAddNode?: (uid: string) => void;
+  onReload: () => void;
 }
 
 const draw = {
@@ -40,19 +35,18 @@ const draw = {
 };
 
 const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
-  ({ delay, nodeUid, graph, onAddNode, config, onReload }, ref) => {
+  ({ nodeUid, graph, onAddNode, config, onReload, setConfig }, ref) => {
     const [isHovered, setIsHovered] = useState(false);
-    const [showAddButton, setShowAddButton] = useState(false);
     
     const  nodeEntity = graph.cacheEntity[nodeUid];
     if (nodeEntity.type !== "node") return;
     const {x, y, colorHex, title, size} = nodeEntity;
 
     const showHover = () => {
-      return config.showHover && isHovered && !showAddButton;
+      return config.showHover && isHovered;
     }
     const showClick = () => {
-      return config.showClick && showAddButton;
+      return config.showClick && config.clickedEntity === nodeUid;
     }
 
     const dragProps: Partial<{ drag: boolean | "x" | "y"; dragConstraints: { left: number; right: number; top: number; bottom: number }, dragMomentum: boolean }> = config.canDrag ? {
@@ -81,9 +75,14 @@ const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
         }}
         onClick={() => {
           setIsHovered(false);
-          setShowAddButton(!showAddButton);
+          if (config.clickedEntity === nodeUid) {
+            setConfig({ ...config, clickedEntity: null });
+          } else {
+            setConfig({ ...config, clickedEntity: nodeUid });
+          }
+          
         }}
-        onDragEnd={(event, info) => {
+        onDragEnd={(_event, info) => {
           nodeEntity.x += info.offset.x;
           nodeEntity.y += info.offset.y;
 
@@ -100,7 +99,6 @@ const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
           variants={draw}
           initial="hidden"
           animate="visible"
-          custom={delay}
         />
 
         <motion.text
@@ -113,7 +111,6 @@ const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
           initial="hidden"
           animate="visible"
           variants={draw}
-          custom={delay}
         >
           {title}
         </motion.text>
@@ -156,8 +153,12 @@ const LinkedNode = forwardRef<SVGSVGElement, NodePros>(
             whileTap={{ scale: 0.9 }}
             onClick={(event) => {
               event.stopPropagation();
-              setShowAddButton(false);
-              onAddNode && onAddNode();
+              if (config.clickedEntity === nodeUid) {
+                setConfig({ ...config, clickedEntity: null });
+              } else {
+                setConfig({ ...config, clickedEntity: nodeUid });
+              }
+              onAddNode && onAddNode(nodeUid);
             }}
           >
             <motion.circle

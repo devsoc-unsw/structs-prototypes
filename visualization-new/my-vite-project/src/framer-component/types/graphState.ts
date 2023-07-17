@@ -34,7 +34,7 @@ export interface NodeEntity extends BaseEntity {
   /**
    * As the node in graph
    */
-  edges: EdgeEntity[];
+  edges: string[];
 
   /**
    * As well as position, generate frontend graph require some smart algo
@@ -51,8 +51,8 @@ export interface EdgeEntity extends BaseEntity {
   /**
    * Edge entity can figure out it's position from the two node
    */
-  from: NodeEntity;
-  to: NodeEntity;
+  from: string;
+  to: string;
 
   label: string;
   colorHex: string;
