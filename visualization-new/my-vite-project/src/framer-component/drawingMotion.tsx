@@ -14,9 +14,19 @@ import {
   NodeEntity,
 } from "./types/graphState";
 import ReactJson from "react-json-view";
+import { motion } from "framer-motion";
 
-export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
+export interface BackendState {
+  state: BackendLinkedList;
+  nextState: () => void;
+}
+
+export const DrawingMotions: React.FC<BackendState> = ({
+  state,
+  nextState,
+}) => {
   const [settings, setSettings] = useState<UiState>(DEFAULT_UISTATE);
+
   /**
    * Parse the background graph state into frontend ones
    */
@@ -88,7 +98,6 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
       head: nodeEntities[0],
     };
 
-    console.log("This should only load once", frontendState);
     return frontendState;
   };
 
@@ -115,7 +124,7 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
   }, [state]);
 
   useEffect(() => {
-    console.log("This should load WHEN SETTINGS CHANGE", settings);
+    setSettings(settings);
   }, [settings]);
 
   /**
@@ -128,21 +137,57 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
           <ControlPanel settings={settings} setSettings={setSettings} />
         </div>
         <div className="linked-list">
-          <LinkedList settings={settings} linkedListState={currGraphState} setSettings={setSettings}/>
+          <div className="LinkedList">
+            <LinkedList
+              settings={settings}
+              linkedListState={currGraphState}
+              setSettings={setSettings}
+            />
+          </div>
+          <div className="timeline">
+            <motion.button
+              className="state-button"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                return;
+              }}
+            >
+              Backward
+            </motion.button>
+            <motion.button
+              className="state-button"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                return;
+              }}
+            >
+              Forward
+            </motion.button>
+            <motion.button
+              className="state-button"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={nextState} // On button click, handleButtonClick function will be called
+            >
+              Update FramerNodes
+            </motion.button>
+          </div>
         </div>
         {settings.debug && (
-        <div className="DEBUG">
-          <pre>
-            <ReactJson
-              src={currGraphState}
-              onEdit={onJsonChange}
-              onDelete={onJsonChange}
-              onAdd={onJsonChange}
-              name={null} // Removes the root node
-            />
-          </pre>
-        </div>
-      )}
+          <div className="DEBUG">
+            <pre>
+              <ReactJson
+                src={currGraphState}
+                onEdit={onJsonChange}
+                onDelete={onJsonChange}
+                onAdd={onJsonChange}
+                name={null} // Removes the root node
+              />
+            </pre>
+          </div>
+        )}
       </div>
     </div>
   );

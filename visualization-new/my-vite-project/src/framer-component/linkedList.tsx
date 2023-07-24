@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import LinkedNode from "./linked-list/node";
 import { UiState } from "./types/uiState";
@@ -20,22 +20,35 @@ export interface LinkedListState {
 const LinkedList: React.FC<LinkedListState> = ({
   linkedListState,
   settings,
-  setSettings
+  setSettings,
 }) => {
-  const [state, setNodes] = useState(linkedListState);
+  // eslint-disable-next-line prefer-const
+  let [state, setNodes] = useState(linkedListState);
   const nodeRefs = useRef<{
     [uid: string]: SVGSVGElement | null;
   }>({});
+  const [updated, setUpdated] = useState(false);
+
+  useEffect(() => {
+    if (updated) {
+      setUpdated(false);
+    }
+  }, [updated]);
+
   const localGlobalSetting = settings;
   const width = window.innerWidth;
   const height = window.innerHeight;
+
   useEffect(() => {
     console.log("GraphState changes!!!", linkedListState);
     setNodes(linkedListState);
+
+    state = linkedListState;
+    setDrawables(renderNodes());
+    setUpdated(true);
   }, [linkedListState]);
 
   useEffect(() => {
-    console.log("Node update!!");
     if (Object.keys(nodeRefs.current).length === 0) {
       // Initialize it
     } else {
@@ -76,7 +89,7 @@ const LinkedList: React.FC<LinkedListState> = ({
   };
 
   const onAddNode = (uid: string) => {
-    let node = state.cacheEntity[uid] as NodeEntity;
+    const node = state.cacheEntity[uid] as NodeEntity;
 
     /**
      * Add a new node to the graph
@@ -85,11 +98,11 @@ const LinkedList: React.FC<LinkedListState> = ({
       uid: v4(),
       type: EntityType.NODE,
       title: "New Node",
-      colorHex: "#FFFFFF", // default color
-      size: 50, // default size
-      edges: [], // will be filled in the next step
-      x: node.x + 100, // simple positioning
-      y: node.y + 140, // simple positioning
+      colorHex: "#FFFFFF",
+      size: 50,
+      edges: [],
+      x: node.x + 100,
+      y: node.y + 140,
     };
     state.cacheEntity[newNode.uid] = newNode;
 
@@ -100,9 +113,9 @@ const LinkedList: React.FC<LinkedListState> = ({
       uid: `${node.uid}-${newNode.uid}`,
       type: EntityType.EDGE,
       from: node.uid,
-      to: newNode.uid, // It's sure to find because we've already created all the nodes
-      label: "", // you might need a better way to label the edge
-      colorHex: "#FFFFFF", // default color
+      to: newNode.uid,
+      label: "",
+      colorHex: "#FFFFFF",
     };
     state.cacheEntity[newEdge.uid] = newEdge;
 
@@ -143,15 +156,18 @@ const LinkedList: React.FC<LinkedListState> = ({
   const [drawables, setDrawables] = useState<JSX.Element[]>(renderNodes());
 
   return (
-    <motion.svg
-      width={width}
-      height={height}
-      viewBox={`0 0 ${width} ${height}`}
-      initial="hidden"
-      animate="visible"
-    >
-      {drawables}
-    </motion.svg>
+    <AnimatePresence>
+      <motion.svg
+        key={updated ? "updated" : "not-updated"}
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        initial="hidden"
+        animate="visible"
+      >
+        {drawables}
+      </motion.svg>
+    </AnimatePresence>
   );
 };
 
