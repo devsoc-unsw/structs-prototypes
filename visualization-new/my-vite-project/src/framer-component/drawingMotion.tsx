@@ -13,9 +13,20 @@ import {
   FrontendLinkedListGraph,
   NodeEntity,
 } from "./types/graphState";
+import ReactJson from "react-json-view";
+import { motion } from "framer-motion";
 
-export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
+export interface BackendState {
+  state: BackendLinkedList;
+  nextState: () => void;
+}
+
+export const DrawingMotions: React.FC<BackendState> = ({
+  state,
+  nextState,
+}) => {
   const [settings, setSettings] = useState<UiState>(DEFAULT_UISTATE);
+
   /**
    * Parse the background graph state into frontend ones
    */
@@ -39,11 +50,11 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
         uid: node.nodeId,
         type: EntityType.NODE,
         title: node.value ? node.value.toString() : "",
-        colorHex: "#FFFFFF", // default color
-        size: 50, // default size
-        edges: [], // will be filled in the next step
-        x: 200 + index * 200, // simple positioning
-        y: 100, // simple positioning
+        colorHex: "#FFFFFF",
+        size: 50,
+        edges: [],
+        x: 200 + index * 200,
+        y: 100,
       };
       nodeEntities.push(nodeEntity);
     });
@@ -63,15 +74,15 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
           const edgeEntity: EdgeEntity = {
             uid: `${node.nodeId}-${nextNode.nodeId}`,
             type: EntityType.EDGE,
-            from: nodeEntity,
-            to: toNode, // It's sure to find because we've already created all the nodes
+            from: nodeEntity.uid,
+            to: toNode.uid, // It's sure to find because we've already created all the nodes
             label: "", // you might need a better way to label the edge
             colorHex: "#FFFFFF", // default color
           };
           edgeEntities.push(edgeEntity);
 
           // Attach this edge to the node
-          nodeEntity.edges.push(edgeEntity);
+          nodeEntity.edges.push(edgeEntity.uid);
         }
       }
     });
@@ -87,17 +98,23 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
       head: nodeEntities[0],
     };
 
-    console.log("This should only load once", frontendState);
     return frontendState;
   };
 
-  console.log("Element reload??");
   const initialFrontendState = parseState(state);
   const [currGraphState, setCurrGraphState] =
     useState<FrontendLinkedListGraph>(initialFrontendState);
   const [historyGraphState, setHistoryGraphState] = useState<
     FrontendLinkedListGraph[]
   >([initialFrontendState]);
+
+  const onJsonChange = (edit: any) => {
+    const newFrontendState = parseState(edit.updated_src);
+
+    setCurrGraphState(newFrontendState);
+    setHistoryGraphState([...historyGraphState, newFrontendState]);
+  };
+
   useEffect(() => {
     const newFrontendState = parseState(state);
 
@@ -107,7 +124,7 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
   }, [state]);
 
   useEffect(() => {
-    console.log("This should load WHEN SETTINGS CHANGE", settings);
+    setSettings(settings);
   }, [settings]);
 
   /**
@@ -120,37 +137,58 @@ export const DrawingMotions: React.FC<BackendLinkedList> = (state) => {
           <ControlPanel settings={settings} setSettings={setSettings} />
         </div>
         <div className="linked-list">
-          <LinkedList settings={settings} linkedListState={currGraphState} />
+          <div className="LinkedList">
+            <LinkedList
+              settings={settings}
+              linkedListState={currGraphState}
+              setSettings={setSettings}
+            />
+          </div>
+          <div className="timeline">
+            <motion.button
+              className="state-button"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                return;
+              }}
+            >
+              Backward
+            </motion.button>
+            <motion.button
+              className="state-button"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                return;
+              }}
+            >
+              Forward
+            </motion.button>
+            <motion.button
+              className="state-button"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={nextState} // On button click, handleButtonClick function will be called
+            >
+              Update FramerNodes
+            </motion.button>
+          </div>
         </div>
-        {settings.debug && ( // this is the conditional JSX rendering based on debug mode
+        {settings.debug && (
           <div className="DEBUG">
-            <pre>{debug(currGraphState)}</pre>
+            <pre>
+              <ReactJson
+                src={currGraphState}
+                onEdit={onJsonChange}
+                onDelete={onJsonChange}
+                onAdd={onJsonChange}
+                name={null} // Removes the root node
+              />
+            </pre>
           </div>
         )}
       </div>
     </div>
   );
 };
-
-function debug(currGraphState: FrontendLinkedListGraph) {
-  console.log('called');
-  const stringifyNode = (node: any) => {
-    const obj = {...node};
-    obj.edges = null;
-    return obj;
-  }
-  const nodesAndEdges = {
-    edges: currGraphState.edges.map(edge => {
-      const obj = {...edge}
-      obj.from = stringifyNode(edge.from);
-      obj.to = stringifyNode(edge.to);
-      return obj
-    }),
-  }
-
-  nodesAndEdges.nodes = currGraphState.nodes.map(node => {
-    return stringifyNode(node);
-  });
-
-  return JSON.stringify(nodesAndEdges ?? {}, null, 2);
-}

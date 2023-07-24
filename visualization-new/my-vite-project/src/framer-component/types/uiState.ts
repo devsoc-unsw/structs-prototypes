@@ -3,11 +3,13 @@ export type UiState = {
   showClick: boolean;
   canDrag: boolean;
   debug: boolean;
+  clickedEntity: string | null;
 }
 
 export const DEFAULT_UISTATE: UiState = {
   showHover: false,
-  showClick: false,
+  showClick: true,
   canDrag: false,
   debug: false,
+  clickedEntity: null
 }
